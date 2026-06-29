@@ -4374,7 +4374,14 @@
       if(!confirm('Excluir pedido '+ped.id+'?')) return;
       var { doc, deleteDoc } = window.__fsModules;
       deleteDoc(doc(window.__db,'pedidos',id))
-        .catch(function(err){ alert('Erro: '+err.message); });
+        .then(function(){
+          var idx = pedidos.findIndex(function(x){ return x.id===id; });
+          if(idx !== -1) pedidos.splice(idx, 1);
+          renderPedidos();
+          renderKanban();
+          renderDashboard();
+        })
+        .catch(function(err){ alert('Erro ao excluir: '+err.message); });
     }
   });
 

@@ -1034,6 +1034,11 @@
   }
   .estq-stock-num.is-zero{ color:var(--coffee-faint); }
   .estq-stock-num.is-low{ color:#9A6500; }
+  .estq-stock-num.is-negative{ color:#A33A3A; font-weight:600; }
+  .estq-card{ cursor:grab; transition:box-shadow .15s, transform .15s; }
+  .estq-card:active{ cursor:grabbing; }
+  .estq-card.is-dragging{ opacity:.45; box-shadow:0 8px 28px rgba(62,46,42,.18); transform:scale(.97); }
+  .estq-card.drag-over{ box-shadow:0 0 0 2px var(--rose-deep); }
   .estq-stock-label{
     font-size:10px; color:var(--coffee-faint); font-weight:500;
     text-transform:uppercase; letter-spacing:.4px; margin-top:2px;
@@ -3367,17 +3372,37 @@
   var searchTerm = '';
   var dragSrcId = null;
 
+  /* ---- ordem personalizada (localStorage) ---- */
+  var PROD_ORDER_KEY = 'cds_prod_order';
+  function getProdOrder(){
+    try { return JSON.parse(localStorage.getItem(PROD_ORDER_KEY)) || []; } catch(e){ return []; }
+  }
+  function saveProdOrder(ids){
+    try { localStorage.setItem(PROD_ORDER_KEY, JSON.stringify(ids)); } catch(e){}
+  }
+  function sortedProdList(lista){
+    var order = getProdOrder();
+    if (!order.length) return lista;
+    var ordered = [], rest = lista.slice();
+    order.forEach(function(id){
+      var idx = rest.findIndex(function(p){ return p.id === id; });
+      if (idx !== -1){ ordered.push(rest.splice(idx, 1)[0]); }
+    });
+    return ordered.concat(rest);
+  }
+
   /* ---- render ---- */
   function filteredList(){
-    return produtos.filter(function(p){
+    var list = produtos.filter(function(p){
       var matchCat = activeCat === 'todos' || p.categoria === activeCat;
       var term = searchTerm.toLowerCase();
       var matchSearch = !term ||
         p.nome.toLowerCase().indexOf(term) !== -1 ||
         p.codigo.toLowerCase().indexOf(term) !== -1 ||
-        p.descricao.toLowerCase().indexOf(term) !== -1;
+        (p.descricao||'').toLowerCase().indexOf(term) !== -1;
       return matchCat && matchSearch;
     });
+    return sortedProdList(list);
   }
 
   function renderGrid(){
@@ -3432,11 +3457,16 @@
         e.preventDefault();
         card.classList.remove('drag-over');
         if (dragSrcId === p.id) return;
-        var srcIdx = produtos.findIndex(function(x){ return x.id === dragSrcId; });
-        var dstIdx = produtos.findIndex(function(x){ return x.id === p.id; });
+        var currentOrder = filteredList().map(function(x){ return x.id; });
+        var srcIdx = currentOrder.indexOf(dragSrcId);
+        var dstIdx = currentOrder.indexOf(p.id);
         if (srcIdx === -1 || dstIdx === -1) return;
-        var removed = produtos.splice(srcIdx, 1)[0];
-        produtos.splice(dstIdx, 0, removed);
+        currentOrder.splice(srcIdx, 1);
+        currentOrder.splice(dstIdx, 0, dragSrcId);
+        /* merge with full order (produtos fora do filtro atual mantêm posição) */
+        var fullOrder = getProdOrder();
+        var remaining = fullOrder.filter(function(id){ return currentOrder.indexOf(id) === -1; });
+        saveProdOrder(currentOrder.concat(remaining));
         renderGrid();
       });
 
@@ -3790,8 +3820,8 @@
       prodListEl.innerHTML = '';
       lista.forEach(function(p){
         var qtd = pedItemQtds[p.id] || 0;
-        var estq = p.qtd||0;
-        var estqClass = estq===0?'zero':(estq<=3?'low':'');
+        var estq = p.qtd !== undefined ? p.qtd : 0;
+        var estqClass = estq<0?'zero':(estq===0?'zero':(estq<=3?'low':''));
         var imgHtml = p.foto
           ? '<img class="ped-prod-thumb" src="'+p.foto+'" alt="'+p.nome+'">'
           : '<div class="ped-prod-thumb-ph"><i class="ti ti-cookie"></i></div>';
@@ -3922,7 +3952,7 @@
       itensPedido.forEach(function(item){
         var p = produtos.find(function(x){ return x.id===item.prodId; });
         if (!p) return;
-        var novaQtd = Math.max(0, (p.qtd||0) - item.qtd);
+        var novaQtd = (p.qtd||0) - item.qtd;
         var { doc, updateDoc } = window.__fsModules;
         updateDoc(doc(window.__db,'produtos', item.prodId), { qtd: novaQtd })
           .catch(function(err){ console.warn('Estoque err:', err); });
@@ -3997,12 +4027,35 @@
     var estqSearch = document.getElementById('estq-search-input');
     var estqSearchTerm = '';
 
+    /* ---- ordem personalizada do estoque (localStorage) ---- */
+    var ESTQ_ORDER_KEY = 'cds_estq_order';
+    var estqDragSrcId = null;
+
+    function getEstqOrder(){
+      try { return JSON.parse(localStorage.getItem(ESTQ_ORDER_KEY)) || []; } catch(e){ return []; }
+    }
+    function saveEstqOrder(ids){
+      try { localStorage.setItem(ESTQ_ORDER_KEY, JSON.stringify(ids)); } catch(e){}
+    }
+    function sortedEstqList(lista){
+      var order = getEstqOrder();
+      if (!order.length) return lista;
+      var ordered = [], rest = lista.slice();
+      order.forEach(function(id){
+        var idx = rest.findIndex(function(p){ return p.id === id; });
+        if (idx !== -1){ ordered.push(rest.splice(idx, 1)[0]); }
+      });
+      return ordered.concat(rest);
+    }
+
     function renderEstq(){
       var lista = getEstqData().filter(function(p){
         if (!estqSearchTerm) return true;
         var q = estqSearchTerm.toLowerCase();
         return p.nome.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q) || p.categoria.toLowerCase().includes(q);
       });
+
+      lista = sortedEstqList(lista);
 
       estqCount.textContent = lista.length + ' produto' + (lista.length === 1 ? '' : 's');
       estqGrid.innerHTML = '';
@@ -4016,11 +4069,13 @@
       }
 
       lista.forEach(function(p){
-        var qtd = p.qtd || 0;
-        var numClass = qtd === 0 ? 'is-zero' : (qtd <= 3 ? 'is-low' : '');
+        var qtd = p.qtd !== undefined ? p.qtd : 0;
+        var numClass = qtd < 0 ? 'is-negative' : (qtd === 0 ? 'is-zero' : (qtd <= 3 ? 'is-low' : ''));
 
         var card = document.createElement('div');
         card.className = 'estq-card';
+        card.setAttribute('draggable', 'true');
+        card.setAttribute('data-id', p.id);
 
         var imgHtml = p.foto
           ? '<img class="estq-thumb" src="' + p.foto + '" alt="' + p.nome + '">'
@@ -4044,6 +4099,37 @@
             '<button class="estq-btn remove" data-estq-action="remove" data-id="' + p.id + '"><i class="ti ti-minus"></i> Remover</button>' +
             '<button class="estq-btn-history" data-estq-action="history" data-id="' + p.id + '"><i class="ti ti-history"></i> Histórico</button>' +
           '</div>';
+
+        /* drag-and-drop */
+        card.addEventListener('dragstart', function(e){
+          estqDragSrcId = p.id;
+          card.classList.add('is-dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        card.addEventListener('dragend', function(){
+          card.classList.remove('is-dragging');
+          estqGrid.querySelectorAll('.estq-card').forEach(function(c){ c.classList.remove('drag-over'); });
+        });
+        card.addEventListener('dragover', function(e){
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          card.classList.add('drag-over');
+        });
+        card.addEventListener('dragleave', function(){ card.classList.remove('drag-over'); });
+        card.addEventListener('drop', function(e){
+          e.preventDefault();
+          card.classList.remove('drag-over');
+          if (estqDragSrcId === p.id) return;
+          var allData = getEstqData();
+          var order = sortedEstqList(allData).map(function(x){ return x.id; });
+          var srcIdx = order.indexOf(estqDragSrcId);
+          var dstIdx = order.indexOf(p.id);
+          if (srcIdx === -1 || dstIdx === -1) return;
+          order.splice(srcIdx, 1);
+          order.splice(dstIdx, 0, estqDragSrcId);
+          saveEstqOrder(order);
+          renderEstq();
+        });
 
         estqGrid.appendChild(card);
       });

@@ -3690,7 +3690,7 @@
       var { collection, onSnapshot, query, orderBy } = window.__fsModules;
       onSnapshot(query(collection(window.__db,'pedidos'), orderBy('data','desc')), function(snap){
         pedidos = [];
-        snap.forEach(function(d){ pedidos.push(Object.assign({id:d.id}, d.data())); });
+        snap.forEach(function(d){ pedidos.push(Object.assign({}, d.data(), {docId:d.id})); });
         renderPedidos();
         renderKanban();
         renderDashboard();
@@ -3953,6 +3953,7 @@
         var p = produtos.find(function(x){ return x.id===item.prodId; });
         if (!p) return;
         var novaQtd = (p.qtd||0) - item.qtd;
+        p.qtd = novaQtd; /* atualiza localmente para refletir negativo imediatamente */
         var { doc, updateDoc } = window.__fsModules;
         updateDoc(doc(window.__db,'produtos', item.prodId), { qtd: novaQtd })
           .catch(function(err){ console.warn('Estoque err:', err); });
@@ -4371,15 +4372,32 @@
       var tel=(ped.clienteWhatsapp||'').replace(/\D/g,'');
       if(tel) window.open('https://wa.me/55'+tel,'_blank');
     } else if(action==='del'){
-      if(!confirm('Excluir pedido '+ped.id+'?')) return;
-      var { doc, deleteDoc } = window.__fsModules;
-      deleteDoc(doc(window.__db,'pedidos',id))
+      if(!confirm('Excluir pedido '+ped.id+'? Os produtos serao devolvidos ao estoque.')) return;
+      var fsM = window.__fsModules;
+      fsM.deleteDoc(fsM.doc(window.__db,'pedidos', ped.docId))
         .then(function(){
-          var idx = pedidos.findIndex(function(x){ return x.id===id; });
+          /* Devolver itens ao estoque e registrar historico */
+          (ped.itens||[]).forEach(function(item){
+            var p = produtos.find(function(x){ return x.id===item.prodId; });
+            if (!p) return;
+            var novaQtd = (p.qtd||0) + item.qtd;
+            p.qtd = novaQtd;
+            fsM.updateDoc(fsM.doc(window.__db,'produtos', item.prodId), { qtd: novaQtd })
+              .catch(function(err){ console.warn('Estoque err:', err); });
+            if (window.__estqHistorico){
+              if (!window.__estqHistorico[item.prodId]) window.__estqHistorico[item.prodId]=[];
+              window.__estqHistorico[item.prodId].unshift({
+                tipo:'add', qtd:item.qtd, obs:'Estorno pedido '+ped.id, data:Date.now()
+              });
+            }
+          });
+          /* Remover do array local */
+          var idx = pedidos.findIndex(function(x){ return x.docId===ped.docId; });
           if(idx !== -1) pedidos.splice(idx, 1);
           renderPedidos();
           renderKanban();
           renderDashboard();
+          if (window.__estqRender) window.__estqRender();
         })
         .catch(function(err){ alert('Erro ao excluir: '+err.message); });
     }

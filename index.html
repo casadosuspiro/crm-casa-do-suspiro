@@ -2384,6 +2384,22 @@
   </div>
 </div>
 
+<!-- ===== Modal de pedidos do cliente ===== -->
+<div class="estq-modal-overlay" id="cliente-pedidos-modal">
+  <div class="estq-modal-box" style="max-width:520px;">
+    <div class="estq-modal-head">
+      <div class="estq-modal-head-info">
+        <h2>Pedidos do cliente</h2>
+        <span class="estq-modal-sub" id="cliente-pedidos-sub">Cliente</span>
+      </div>
+      <button class="modal-close" id="cliente-pedidos-close" type="button"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="estq-modal-body">
+      <div class="estq-hist-list" id="cliente-pedidos-list"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ===== Modal de produto ===== -->
 <div class="prod-modal-overlay" id="prod-modal">
   <div class="prod-modal-box">
@@ -3010,6 +3026,7 @@
         snap.forEach(function(doc){ clientes.push(Object.assign({ id: doc.id }, doc.data())); });
         window.__crmClientes = clientes;
         applySearch();
+        if (window.__crmRenderDashboard) window.__crmRenderDashboard();
       });
     }
     tentar();
@@ -3296,6 +3313,70 @@
       .catch(function(err){ alert('Erro ao excluir: '+err.message); });
   });
 
+  /* ===== Pedidos do cliente ===== */
+  var clientePedidosModal = document.getElementById('cliente-pedidos-modal');
+  var clientePedidosSub   = document.getElementById('cliente-pedidos-sub');
+  var clientePedidosList  = document.getElementById('cliente-pedidos-list');
+
+  function openClientePedidos(clienteId, clienteNome){
+    clientePedidosSub.textContent = clienteNome;
+    var statusLabels = window.__crmStatusLabels || [];
+    var statusClasses = window.__crmStatusClasses || [];
+    var fmtMoney2 = window.__crmFmtMoney2 || function(v){ return 'R$ '+v; };
+    var fmtDateShort = window.__crmFmtDateShort || function(ts){ return new Date(ts).toLocaleDateString('pt-BR'); };
+    var todosPedidos = window.__crmPedidos || [];
+    var doPedidos = todosPedidos.filter(function(p){
+      return p.clienteId === clienteId;
+    });
+    clientePedidosList.innerHTML = '';
+    if (doPedidos.length === 0){
+      clientePedidosList.innerHTML = '<div class="estq-hist-empty">Nenhum pedido registrado ainda.</div>';
+    } else {
+      doPedidos.forEach(function(ped){
+        var div = document.createElement('div');
+        div.className = 'estq-hist-item';
+        div.style.cursor = 'pointer';
+        div.innerHTML =
+          '<div class="estq-hist-icon add" style="background:var(--rose-pale);color:var(--rose-deep);">' +
+            '<i class="ti ti-shopping-bag"></i>' +
+          '</div>' +
+          '<div class="estq-hist-content">' +
+            '<div class="estq-hist-main">' +
+              '<span class="estq-hist-delta" style="color:var(--coffee);">' + (ped.id||'') + '</span>' +
+              '<span class="ped-status-select ' + (statusClasses[ped.status]||'') + '" style="cursor:default;">' + (statusLabels[ped.status]||'') + '</span>' +
+              '<span class="estq-hist-obs" style="font-weight:600;color:var(--rose-deep);">' + fmtMoney2(ped.total) + '</span>' +
+            '</div>' +
+            '<div class="estq-hist-date">' + fmtDateShort(ped.data) + ' &middot; ' + (ped.pago ? '✓ Pago' : 'Pendente') + '</div>' +
+          '</div>';
+        div.addEventListener('click', function(){
+          clientePedidosModal.classList.remove('is-open');
+          if (window.__crmOpenPedView) window.__crmOpenPedView(ped);
+        });
+        clientePedidosList.appendChild(div);
+      });
+    }
+    clientePedidosModal.classList.add('is-open');
+  }
+
+  /* Mantém a lista atualizada se o modal estiver aberto e os pedidos sincronizarem */
+  var clientePedidosOpenInfo = null;
+  window.__crmRefreshClientePedidos = function(){
+    if (clientePedidosOpenInfo && clientePedidosModal.classList.contains('is-open')){
+      openClientePedidos(clientePedidosOpenInfo.id, clientePedidosOpenInfo.nome);
+    }
+  };
+
+  document.getElementById('cliente-pedidos-close').addEventListener('click', function(){
+    clientePedidosModal.classList.remove('is-open');
+    clientePedidosOpenInfo = null;
+  });
+  clientePedidosModal.addEventListener('click', function(e){
+    if (e.target === clientePedidosModal){
+      clientePedidosModal.classList.remove('is-open');
+      clientePedidosOpenInfo = null;
+    }
+  });
+
   /* ===== Ações da tabela ===== */
   tbody.addEventListener('click', function(e){
     var btn = e.target.closest('.action-btn');
@@ -3311,7 +3392,8 @@
       var digits = onlyDigits(c.whatsapp);
       if (digits) window.open('https://wa.me/55' + digits, '_blank');
     } else if (action === 'orders'){
-      window.alert('Pedidos de ' + getDisplayName(c) + ' — página de pedidos do cliente ainda será desenvolvida.');
+      clientePedidosOpenInfo = { id: id, nome: getDisplayName(c) };
+      openClientePedidos(id, getDisplayName(c));
     } else if (action === 'delete'){
       var confirmed = window.confirm('Tem certeza que deseja excluir o cadastro de "' + getDisplayName(c) + '"? Essa ação não pode ser desfeita.');
       if (!confirmed) return;
@@ -3695,6 +3777,8 @@
   var pedidos = [];
   var statusLabels = ['Pedido realizado','Em produção','Produção concluída','Em entrega','Entregue'];
   var statusClasses = ['s0','s1','s2','s3','s4'];
+  window.__crmStatusLabels = statusLabels;
+  window.__crmStatusClasses = statusClasses;
 
   function fmtDateShort(ts){
     var d = new Date(ts);
@@ -3703,6 +3787,8 @@
   }
   function pedUid(){ return 'PED-'+ String(Date.now()).slice(-5) + String(Math.floor(Math.random()*9)+1); }
   function fmtMoney2(v){ return 'R$ '+parseFloat(v||0).toFixed(2).replace('.',','); }
+  window.__crmFmtMoney2 = fmtMoney2;
+  window.__crmFmtDateShort = fmtDateShort;
 
   /* Sync pedidos em tempo real */
   (function iniciarSyncPedidos(){
@@ -3712,9 +3798,11 @@
       onSnapshot(query(collection(window.__db,'pedidos'), orderBy('data','desc')), function(snap){
         pedidos = [];
         snap.forEach(function(d){ pedidos.push(Object.assign({}, d.data(), {docId:d.id})); });
+        window.__crmPedidos = pedidos;
         renderPedidos();
         renderKanban();
         renderDashboard();
+        if (window.__crmRefreshClientePedidos) window.__crmRefreshClientePedidos();
       });
     }
     tentar();
@@ -4455,6 +4543,7 @@
       '</div>';
     document.getElementById('ped-view-modal').classList.add('is-open');
   }
+  window.__crmOpenPedView = openPedView;
 
   document.getElementById('ped-view-close').addEventListener('click', function(){
     document.getElementById('ped-view-modal').classList.remove('is-open');
@@ -4547,6 +4636,7 @@
   var dashChart = null;
 
   function renderDashboard(){
+    window.__crmRenderDashboard = renderDashboard;
     var now = new Date();
     var mesAtual = now.getMonth();
     var anoAtual = now.getFullYear();
@@ -4571,7 +4661,7 @@
     document.getElementById('dash-pedidos-semana').textContent = pedidosSemana;
     document.getElementById('dash-pedidos-mes').textContent = pedidosMes;
     document.getElementById('dash-fat-mes').textContent = fmtMoney2(fatMes);
-    document.getElementById('dash-clientes-ativos').textContent = clientes.length;
+    document.getElementById('dash-clientes-ativos').textContent = (window.__crmClientes || []).length;
 
     /* sub-textos */
     var nomeMes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mesAtual];

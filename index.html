@@ -350,44 +350,6 @@
     background: var(--rose-soft);
   }
 
-
-  /* ===== Modal: Pedidos do cliente ===== */
-  .client-orders-overlay{
-    display:none; position:fixed; inset:0;
-    background:rgba(62,46,42,.34); z-index:90;
-    align-items:center; justify-content:center; padding:24px;
-  }
-  .client-orders-overlay.is-open{ display:flex; }
-  .client-orders-box{
-    background:var(--paper); border-radius:16px;
-    width:100%; max-width:600px; max-height:88vh; overflow-y:auto;
-    box-shadow:0 20px 50px rgba(62,46,42,.25);
-  }
-  .client-orders-head{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:20px 24px 16px; border-bottom:1px solid var(--line);
-    position:sticky; top:0; background:var(--paper); z-index:2;
-  }
-  .client-orders-head h2{ font-family:"Fraunces",serif; font-weight:500; font-size:18px; margin:0; color:var(--coffee); }
-  .client-orders-sub{ font-size:12px; color:var(--coffee-faint); margin-top:2px; }
-  .client-orders-body{ padding:20px 24px 24px; display:flex; flex-direction:column; gap:10px; }
-  .client-order-row{
-    background:var(--cream); border:1px solid var(--line);
-    border-radius:11px; padding:14px 16px;
-    display:flex; flex-direction:column; gap:6px;
-  }
-  .client-order-row-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .client-order-code{ font-size:11px; font-weight:600; color:var(--rose-deep); background:var(--rose-pale); padding:2px 8px; border-radius:20px; }
-  .client-order-date{ font-size:12px; color:var(--coffee-faint); }
-  .client-order-total{ font-size:13px; font-weight:600; color:var(--coffee); }
-  .client-order-itens{ font-size:12px; color:var(--coffee-soft); line-height:1.5; }
-  .client-order-status{ font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; display:inline-block; }
-  .client-order-status.s0{ background:#EEF2FF; color:#3B4ED8; }
-  .client-order-status.s1{ background:#FEF3E2; color:#9A6500; }
-  .client-order-status.s2{ background:#EFE7F6; color:#6B469C; }
-  .client-order-status.s3{ background:#E0F2FE; color:#0369A1; }
-  .client-order-status.s4{ background:#EAF1EC; color:#2E6E44; }
-  .client-orders-empty{ padding:30px; text-align:center; color:var(--coffee-faint); font-size:13px; }
   ::-webkit-scrollbar{ width:9px; height:9px; }
   ::-webkit-scrollbar-thumb{ background: var(--line-strong); border-radius:6px; }
   ::-webkit-scrollbar-track{ background:transparent; }
@@ -3349,7 +3311,7 @@
       var digits = onlyDigits(c.whatsapp);
       if (digits) window.open('https://wa.me/55' + digits, '_blank');
     } else if (action === 'orders'){
-      openClientOrders(c);
+      window.alert('Pedidos de ' + getDisplayName(c) + ' — página de pedidos do cliente ainda será desenvolvida.');
     } else if (action === 'delete'){
       var confirmed = window.confirm('Tem certeza que deseja excluir o cadastro de "' + getDisplayName(c) + '"? Essa ação não pode ser desfeita.');
       if (!confirmed) return;
@@ -3357,62 +3319,6 @@
       deleteDoc(doc(window.__db,'clientes', id))
         .catch(function(err){ alert('Erro ao excluir: '+err.message); });
     }
-  });
-
-  /* ===== Histórico de pedidos do cliente ===== */
-  var clientOrdersModal = document.getElementById('client-orders-modal');
-  var clientOrdersSub   = document.getElementById('client-orders-sub');
-  var clientOrdersBody  = document.getElementById('client-orders-body');
-  var statusLabelsC = ['Pedido realizado','Em produção','Produção concluída','Em entrega','Entregue'];
-  var statusClassesC = ['s0','s1','s2','s3','s4'];
-
-  function fmtMoneyC(v){ return 'R$ '+parseFloat(v||0).toFixed(2).replace('.',','); }
-  function fmtDateC(ts){
-    var d = new Date(ts);
-    var pad = function(n){ return n<10?'0'+n:n; };
-    return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear();
-  }
-
-  function openClientOrders(c){
-    var nome = c.tipo === 'pf' ? c.nome : c.razao;
-    clientOrdersSub.textContent = nome + ' — #' + c.codigo;
-    clientOrdersBody.innerHTML = '';
-
-    // Buscar pedidos deste cliente via window.__crmPedidos
-    var todos = window.__crmPedidos || [];
-    var lista = todos.filter(function(p){ return p.clienteId === c.id; });
-    lista.sort(function(a,b){ return b.data - a.data; });
-
-    if (lista.length === 0){
-      clientOrdersBody.innerHTML = '<div class="client-orders-empty">Nenhum pedido encontrado para este cliente.</div>';
-    } else {
-      lista.forEach(function(ped){
-        var itensText = (ped.itens||[]).map(function(i){ return i.nome+' ×'+i.qtd; }).join(', ');
-        var statusIdx = ped.status || 0;
-        var div = document.createElement('div');
-        div.className = 'client-order-row';
-        div.innerHTML =
-          '<div class="client-order-row-top">'+
-            '<span class="client-order-code">'+ped.id+'</span>'+
-            '<span class="client-order-date">'+fmtDateC(ped.data)+'</span>'+
-            '<span class="client-order-total">'+fmtMoneyC(ped.total)+'</span>'+
-          '</div>'+
-          '<div class="client-order-itens">'+itensText+'</div>'+
-          '<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">'+
-            '<span class="client-order-status '+statusClassesC[statusIdx]+'">'+statusLabelsC[statusIdx]+'</span>'+
-            (ped.pago ? '<span style="font-size:11px;color:#2E6E44;font-weight:600;">✓ Pago</span>' : '<span style="font-size:11px;color:var(--coffee-faint);">Aguardando pagamento</span>')+
-          '</div>';
-        clientOrdersBody.appendChild(div);
-      });
-    }
-    clientOrdersModal.classList.add('is-open');
-  }
-
-  document.getElementById('client-orders-close').addEventListener('click', function(){
-    clientOrdersModal.classList.remove('is-open');
-  });
-  clientOrdersModal.addEventListener('click', function(e){
-    if (e.target === clientOrdersModal) clientOrdersModal.classList.remove('is-open');
   });
 
 })();
@@ -3785,7 +3691,6 @@
       onSnapshot(query(collection(window.__db,'pedidos'), orderBy('data','desc')), function(snap){
         pedidos = [];
         snap.forEach(function(d){ pedidos.push(Object.assign({}, d.data(), {docId:d.id})); });
-        window.__crmPedidos = pedidos;
         renderPedidos();
         renderKanban();
         renderDashboard();
@@ -4054,11 +3959,9 @@
           .catch(function(err){ console.warn('Estoque err:', err); });
         if (window.__estqHistorico){
           if (!window.__estqHistorico[item.prodId]) window.__estqHistorico[item.prodId]=[];
-          var histEntrada = { tipo:'remove', qtd:item.qtd, obs:'Pedido '+pedidoId, data:Date.now() };
-          window.__estqHistorico[item.prodId].unshift(histEntrada);
-          // Persistir no Firestore
-          window.__fsModules.addDoc(window.__fsModules.collection(window.__db,'estoque_historico'),
-            Object.assign({ prodId: item.prodId }, histEntrada)).catch(function(){});
+          window.__estqHistorico[item.prodId].unshift({
+            tipo:'remove', qtd:item.qtd, obs:'Pedido '+pedidoId, data:Date.now()
+          });
         }
       });
 
@@ -4107,30 +4010,6 @@
     // Histórico de movimentações: { prodId: [{tipo:'add'|'remove', qtd, obs, data}] }
     var estqHistorico = {};
     window.__estqHistorico = estqHistorico;
-
-    // Carregar histórico do Firestore
-    (function carregarHistorico(){
-      function tentar(){
-        if (!window.__db || !window.__fsModules){ setTimeout(tentar, 300); return; }
-        var { collection, onSnapshot } = window.__fsModules;
-        onSnapshot(collection(window.__db, 'estoque_historico'), function(snap){
-          // Limpar e recarregar do Firestore
-          Object.keys(estqHistorico).forEach(function(k){ delete estqHistorico[k]; });
-          snap.forEach(function(d){
-            var item = d.data();
-            var prodId = item.prodId;
-            if (!prodId) return;
-            if (!estqHistorico[prodId]) estqHistorico[prodId] = [];
-            estqHistorico[prodId].push({ tipo: item.tipo, qtd: item.qtd, obs: item.obs || '', data: item.data });
-          });
-          // Ordenar cada lista por data decrescente
-          Object.keys(estqHistorico).forEach(function(k){
-            estqHistorico[k].sort(function(a,b){ return b.data - a.data; });
-          });
-        });
-      }
-      tentar();
-    })();
 
     function getEstqData(){
       // Usa a mesma lista de produtos do escopo pai
@@ -4320,18 +4199,17 @@
         }
       }
 
-      var entrada = { tipo: ajusteMode, qtd: qty, obs: ajusteObs.value.trim(), data: Date.now() };
-
-      // Salvar no Firebase (quantidade e histórico persistido)
-      var fsM = window.__fsModules;
-      fsM.updateDoc(fsM.doc(window.__db,'produtos', ajusteProdId), { qtd: novaQtd })
+      // Salvar no Firebase
+      var { doc, updateDoc } = window.__fsModules;
+      updateDoc(doc(window.__db,'produtos', ajusteProdId), { qtd: novaQtd })
         .catch(function(err){ alert('Erro: '+err.message); });
-      fsM.addDoc(fsM.collection(window.__db,'estoque_historico'), Object.assign({ prodId: ajusteProdId }, entrada))
-        .catch(function(err){ console.warn('Histórico err:', err); });
 
-      // Registrar também localmente para acesso imediato
+      // Registrar no histórico local
       if (!estqHistorico[ajusteProdId]) estqHistorico[ajusteProdId] = [];
-      estqHistorico[ajusteProdId].unshift(entrada);
+      estqHistorico[ajusteProdId].unshift({
+        tipo: ajusteMode, qtd: qty,
+        obs: ajusteObs.value.trim(), data: Date.now()
+      });
 
       closeAjuste();
     });
@@ -4464,7 +4342,7 @@
       if(p){
         p.pago=chk.checked;
         var { doc, updateDoc } = window.__fsModules;
-        updateDoc(doc(window.__db,'pedidos',p.docId),{pago:p.pago}).catch(function(){});
+        updateDoc(doc(window.__db,'pedidos',id),{pago:p.pago}).catch(function(){});
         renderKanban();
       }
     }
@@ -4475,7 +4353,7 @@
         p.status=parseInt(sel.value);
         sel.className='ped-status-select '+statusClasses[p.status];
         var { doc, updateDoc } = window.__fsModules;
-        updateDoc(doc(window.__db,'pedidos',p.docId),{status:p.status}).catch(function(){});
+        updateDoc(doc(window.__db,'pedidos',id),{status:p.status}).catch(function(){});
         renderKanban();
         renderDashboard();
       }
@@ -4508,11 +4386,9 @@
               .catch(function(err){ console.warn('Estoque err:', err); });
             if (window.__estqHistorico){
               if (!window.__estqHistorico[item.prodId]) window.__estqHistorico[item.prodId]=[];
-              var histEstorno = { tipo:'add', qtd:item.qtd, obs:'Estorno pedido '+ped.id, data:Date.now() };
-              window.__estqHistorico[item.prodId].unshift(histEstorno);
-              // Persistir no Firestore
-              window.__fsModules.addDoc(window.__fsModules.collection(window.__db,'estoque_historico'),
-                Object.assign({ prodId: item.prodId }, histEstorno)).catch(function(){});
+              window.__estqHistorico[item.prodId].unshift({
+                tipo:'add', qtd:item.qtd, obs:'Estorno pedido '+ped.id, data:Date.now()
+              });
             }
           });
           /* Remover do array local */
@@ -4637,7 +4513,7 @@
         if(ped && ped.status !== targetStatus){
           ped.status = targetStatus;
           var { doc, updateDoc } = window.__fsModules;
-          updateDoc(doc(window.__db,'pedidos',ped.docId),{status:targetStatus}).catch(function(){});
+          updateDoc(doc(window.__db,'pedidos',id),{status:targetStatus}).catch(function(){});
           renderKanban();
           renderPedidos();
           renderDashboard();
@@ -4676,7 +4552,7 @@
     document.getElementById('dash-pedidos-semana').textContent = pedidosSemana;
     document.getElementById('dash-pedidos-mes').textContent = pedidosMes;
     document.getElementById('dash-fat-mes').textContent = fmtMoney2(fatMes);
-    document.getElementById('dash-clientes-ativos').textContent = (window.__crmClientes || []).length;
+    document.getElementById('dash-clientes-ativos').textContent = clientes.length;
 
     /* sub-textos */
     var nomeMes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mesAtual];
@@ -4882,21 +4758,6 @@
   });
 })();
 </script>
-
-
-<!-- ===== Modal: Pedidos do cliente ===== -->
-<div class="client-orders-overlay" id="client-orders-modal">
-  <div class="client-orders-box">
-    <div class="client-orders-head">
-      <div>
-        <h2>Pedidos do cliente</h2>
-        <div class="client-orders-sub" id="client-orders-sub"></div>
-      </div>
-      <button class="modal-close" id="client-orders-close"><i class="ti ti-x"></i></button>
-    </div>
-    <div class="client-orders-body" id="client-orders-body"></div>
-  </div>
-</div>
 
 </body>
 </html>

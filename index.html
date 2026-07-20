@@ -1929,7 +1929,7 @@
             <div class="cep-row">
               <div class="field" data-field="fat-cep">
                 <label>CEP <span class="req">*</span></label>
-                <input type="text" inputmode="numeric" placeholder="00000-000" maxlength="9" data-mask="cep" data-cep-input required>
+                <input type="text" inputmode="numeric" placeholder="00000-000" maxlength="9" data-mask="cep" data-addr="cep" data-cep-input required>
                 <span class="field-error">Informe um CEP válido.</span>
               </div>
               <button type="button" class="btn-cep" data-cep-search>
@@ -2000,7 +2000,7 @@
               <div class="cep-row">
                 <div class="field" data-field="ent-cep">
                   <label>CEP <span class="req">*</span></label>
-                  <input type="text" inputmode="numeric" placeholder="00000-000" maxlength="9" data-mask="cep" data-cep-input required>
+                  <input type="text" inputmode="numeric" placeholder="00000-000" maxlength="9" data-mask="cep" data-addr="cep" data-cep-input required>
                   <span class="field-error">Informe um CEP válido.</span>
                 </div>
                 <button type="button" class="btn-cep" data-cep-search>
@@ -4556,12 +4556,41 @@
   /* ===================================================
      KANBAN
   =================================================== */
+  /* Controle local (não altera o banco de dados) de há quanto tempo cada
+     pedido está com status "Entregue", usado apenas para ocultar do Kanban
+     os pedidos entregues há mais de 1 semana. A relação/listagem de pedidos
+     (página Pedidos) não é afetada por esse controle. */
+  var ENTREGUE_STATUS = 4;
+  var UMA_SEMANA_MS = 7 * 24 * 60 * 60 * 1000;
+  function getEntregueDesde(ped){
+    var key = 'crm_entregue_desde_' + (ped.docId || ped.id);
+    var stored = localStorage.getItem(key);
+    if (!stored){
+      stored = String(Date.now());
+      localStorage.setItem(key, stored);
+    }
+    return parseInt(stored, 10);
+  }
+  function limparEntregueDesde(ped){
+    var key = 'crm_entregue_desde_' + (ped.docId || ped.id);
+    localStorage.removeItem(key);
+  }
+  function pedidoOcultoNoKanban(ped){
+    if (ped.status !== ENTREGUE_STATUS){
+      limparEntregueDesde(ped);
+      return false;
+    }
+    var desde = getEntregueDesde(ped);
+    return (Date.now() - desde) > UMA_SEMANA_MS;
+  }
+
   function renderKanban(){
     for(var s=0;s<5;s++){
       document.getElementById('kcol-'+s).innerHTML='';
       document.getElementById('kcount-'+s).textContent='0';
     }
     pedidos.forEach(function(ped){
+      if (pedidoOcultoNoKanban(ped)) return; /* oculta apenas da visualização Kanban */
       var col=document.getElementById('kcol-'+ped.status);
       var cnt=document.getElementById('kcount-'+ped.status);
       if(!col) return;

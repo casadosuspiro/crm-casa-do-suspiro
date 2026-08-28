@@ -1446,6 +1446,7 @@
   .ped-status-select.s2{ background:#EFE7F6; color:#6B469C; border-color:#D4B8EF; }
   .ped-status-select.s3{ background:#E0F2FE; color:#0369A1; border-color:#BAE6FD; }
   .ped-status-select.s4{ background:#EAF1EC; color:#2E6E44; border-color:#BEE6CC; }
+  .ped-status-select.s5{ background:#FDEBE0; color:#B5541A; border-color:#F5C7A4; }
 
   .ped-items-cell{ max-width:200px; font-size:12px; line-height:1.4; color:var(--coffee-soft); }
   .ped-value-cell{ font-weight:600; color:var(--coffee); white-space:nowrap; }
@@ -2155,7 +2156,7 @@
 
               <div class="ped-search-field">
                 <i class="ti ti-search"></i>
-                <input type="text" id="ped-client-search" placeholder="Nome, código ou WhatsApp...">
+                <input type="text" id="ped-client-search" placeholder="Nome, razão social, código ou WhatsApp...">
               </div>
               <div class="ped-client-list" id="ped-client-list"></div>
 
@@ -2283,6 +2284,13 @@
               <span class="kanban-col-count" id="kcount-2">0</span>
             </div>
             <div class="kanban-cards" id="kcol-2"></div>
+          </div>
+          <div class="kanban-col" data-status="5">
+            <div class="kanban-col-head">
+              <span class="kanban-col-title">Retirada</span>
+              <span class="kanban-col-count" id="kcount-5">0</span>
+            </div>
+            <div class="kanban-cards" id="kcol-5"></div>
           </div>
           <div class="kanban-col" data-status="3">
             <div class="kanban-col-head">
@@ -3775,10 +3783,15 @@
      PEDIDOS — dados globais
   =================================================== */
   var pedidos = [];
-  var statusLabels = ['Pedido realizado','Em produção','Produção concluída','Em entrega','Entregue'];
-  var statusClasses = ['s0','s1','s2','s3','s4'];
+  var statusLabels = ['Pedido realizado','Em produção','Produção concluída','Em entrega','Entregue','Retirada'];
+  var statusClasses = ['s0','s1','s2','s3','s4','s5'];
+  /* Ordem de EXIBIÇÃO dos status (IDs), independente do número salvo em cada pedido.
+     Isso permite reposicionar "Retirada" na tela sem alterar o valor gravado
+     nos pedidos já existentes. */
+  var statusOrder = [0,1,2,5,3,4];
   window.__crmStatusLabels = statusLabels;
   window.__crmStatusClasses = statusClasses;
+  window.__crmStatusOrder = statusOrder;
 
   function fmtDateShort(ts){
     var d = new Date(ts);
@@ -3858,10 +3871,13 @@
       var term = (clientSearchInput.value||'').trim().toLowerCase();
       var lista = getClientes().filter(function(c){
         if (!term) return true;
-        var n = getDisplayName(c).toLowerCase();
+        var n = (getDisplayName(c)||'').toLowerCase();
+        var nome = (c.nome||'').toLowerCase();
+        var razao = (c.razao||'').toLowerCase();
         var cod = (c.codigo||'').toLowerCase();
         var wpp = (c.whatsapp||'').replace(/\D/g,'');
-        return n.includes(term) || cod.includes(term) || wpp.includes(term.replace(/\D/g,''));
+        var termDigits = term.replace(/\D/g,'');
+        return n.includes(term) || nome.includes(term) || razao.includes(term) || cod.includes(term) || (termDigits && wpp.includes(termDigits));
       });
       clientListEl.innerHTML = '';
       if (lista.length===0){
@@ -4429,7 +4445,7 @@
         '<td style="text-align:center;"><input type="checkbox" class="ped-pago-check" '+(ped.pago?'checked':'')+' data-ped-id="'+ped.id+'"></td>'+
         '<td>'+
           '<select class="ped-status-select '+statusClasses[ped.status]+'" data-ped-id="'+ped.id+'">'+
-            statusLabels.map(function(l,i){ return '<option value="'+i+'"'+(ped.status===i?' selected':'')+'>'+l+'</option>'; }).join('')+
+            statusOrder.map(function(i){ var l=statusLabels[i]; return '<option value="'+i+'"'+(ped.status===i?' selected':'')+'>'+l+'</option>'; }).join('')+
           '</select>'+
         '</td>'+
         '<td style="white-space:nowrap;">'+
@@ -4585,7 +4601,7 @@
   }
 
   function renderKanban(){
-    for(var s=0;s<5;s++){
+    for(var s=0;s<6;s++){
       document.getElementById('kcol-'+s).innerHTML='';
       document.getElementById('kcount-'+s).textContent='0';
     }
@@ -4622,7 +4638,7 @@
       col.appendChild(card);
     });
     /* mostrar "vazio" em colunas sem cards */
-    for(var s=0;s<5;s++){
+    for(var s=0;s<6;s++){
       var col=document.getElementById('kcol-'+s);
       if(col.children.length===0){
         var empty=document.createElement('div');

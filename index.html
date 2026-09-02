@@ -1530,6 +1530,161 @@
   }
   .kanban-card.drag-over-card{ box-shadow:0 0 0 2px var(--rose-deep); }
 
+  /* ===== Despesas (Financeiro) ===== */
+  .desp-metric-row{
+    display:grid; grid-template-columns: repeat(4,1fr); gap:14px; margin-bottom:18px;
+  }
+  .desp-metric-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:18px 18px 16px; position:relative; overflow:hidden;
+  }
+  .desp-metric-card::after{
+    content:""; position:absolute; right:-18px; top:-18px; width:64px; height:64px;
+    border-radius:50%; background:var(--rose-pale); opacity:.6;
+  }
+  .desp-metric-card .dm-label{
+    font-size:11px; font-weight:600; letter-spacing:.5px; text-transform:uppercase;
+    color:var(--coffee-faint); margin:0 0 10px; position:relative;
+  }
+  .desp-metric-card .dm-value{
+    font-family:'Fraunces',serif; font-size:24px; font-weight:500; color:var(--coffee); position:relative;
+  }
+  .desp-metric-card .dm-sub{ font-size:11.5px; color:var(--coffee-faint); margin-top:4px; position:relative; }
+
+  .desp-toolbar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+  .desp-month-nav{
+    display:flex; align-items:center; gap:2px; background:var(--paper);
+    border:1px solid var(--line-strong); border-radius:10px; padding:4px;
+  }
+  .desp-month-btn{
+    width:32px; height:32px; border-radius:8px; border:none; background:transparent;
+    color:var(--coffee-soft); font-size:15px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:.12s;
+  }
+  .desp-month-btn:hover{ background:var(--rose-pale); color:var(--rose-deep); }
+  .desp-month-label{
+    font-size:13px; font-weight:600; color:var(--coffee); padding:0 10px;
+    min-width:120px; text-align:center; text-transform:capitalize;
+  }
+
+  .desp-status-filter{
+    font-family:'Inter',sans-serif; font-size:12.5px; font-weight:500; color:var(--coffee-soft);
+    background:var(--paper); border:1px solid var(--line-strong); border-radius:10px;
+    padding:9px 30px 9px 13px; cursor:pointer; outline:none; appearance:none; -webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237A645E' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat; background-position:right 10px center;
+  }
+  .desp-status-filter:hover{ border-color:var(--rose-deep); }
+
+  .despesas-table-wrap{ background:var(--paper); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  table.despesas-table{ width:100%; border-collapse:collapse; }
+  .despesas-table thead th{
+    text-align:left; font-size:11px; font-weight:600; letter-spacing:.4px; text-transform:uppercase;
+    color:var(--coffee-faint); padding:12px 16px; background:var(--cream-deep);
+    border-bottom:1px solid var(--line); white-space:nowrap;
+  }
+  .despesas-table thead th.col-actions{ text-align:right; }
+  .despesas-table tbody td{
+    padding:12px 16px; font-size:13px; color:var(--coffee);
+    border-bottom:1px solid var(--line); vertical-align:middle;
+  }
+  .despesas-table tbody tr:last-child td{ border-bottom:none; }
+  .despesas-table tbody tr:hover{ background:var(--rose-pale); }
+
+  .desp-cat-pill{
+    font-size:10.5px; font-weight:600; padding:3px 10px; border-radius:20px;
+    display:inline-block; background:var(--rose-pale); color:var(--rose-deep); white-space:nowrap;
+  }
+  .desp-tipo-pill{
+    font-size:10.5px; font-weight:600; padding:3px 10px; border-radius:20px;
+    display:inline-block; white-space:nowrap;
+  }
+  .desp-tipo-pill.pontual{ background:#FEF3E2; color:#9A6500; }
+  .desp-tipo-pill.recorrente{ background:#E0F2FE; color:#0369A1; }
+
+  .desp-value-cell{ font-weight:600; color:var(--coffee); white-space:nowrap; }
+
+  .desp-status-toggle{ display:inline-flex; align-items:center; gap:8px; cursor:pointer; user-select:none; border:none; background:none; padding:0; font-family:'Inter',sans-serif; }
+  .desp-switch{ position:relative; width:34px; height:19px; border-radius:20px; background:var(--line-strong); flex-shrink:0; transition:background .15s; }
+  .desp-switch::after{
+    content:""; position:absolute; top:2px; left:2px; width:15px; height:15px; border-radius:50%;
+    background:#fff; box-shadow:0 1px 2px rgba(62,46,42,.25); transition:transform .15s;
+  }
+  .desp-status-toggle.is-pago .desp-switch{ background:#2E8B4F; }
+  .desp-status-toggle.is-pago .desp-switch::after{ transform:translateX(15px); }
+  .desp-status-text{ font-size:12.5px; font-weight:500; color:var(--coffee-soft); white-space:nowrap; }
+  .desp-status-toggle.is-pago .desp-status-text{ color:#2E6E44; }
+
+  .despesas-empty{ padding:56px 20px; text-align:center; color:var(--coffee-faint); }
+  .despesas-empty .ti{ font-size:30px; display:block; margin-bottom:10px; }
+  .despesas-empty p{ margin:0; font-size:13px; }
+
+  .desp-actions-cell{ text-align:right; white-space:nowrap; }
+
+  /* Modal despesa */
+  .desp-modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(62,46,42,.34); z-index:65;
+    align-items:center; justify-content:center; padding:24px;
+  }
+  .desp-modal-overlay.is-open{ display:flex; }
+  .desp-modal-box{
+    background:var(--paper); border-radius:16px; width:100%; max-width:600px;
+    max-height:90vh; overflow-y:auto; box-shadow:0 20px 50px rgba(62,46,42,.25);
+  }
+  .desp-modal-head{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    padding:20px 24px 4px; position:sticky; top:0; background:var(--paper); z-index:2;
+  }
+  .desp-modal-head .desp-modal-eyebrow{
+    font-size:11px; letter-spacing:.6px; text-transform:uppercase; color:var(--rose-deep);
+    font-weight:600; margin:0 0 4px;
+  }
+  .desp-modal-head h2{ font-family:'Fraunces',serif; font-weight:500; font-size:19px; margin:0; color:var(--coffee); }
+  .desp-modal-body{ padding:16px 24px 8px; display:flex; flex-direction:column; gap:18px; }
+  .desp-modal-foot{
+    padding:16px 24px 22px; border-top:1px solid var(--line); display:flex;
+    justify-content:flex-end; gap:10px; margin-top:8px;
+  }
+
+  .desp-field-row{ display:grid; grid-template-columns:repeat(2,1fr); gap:16px 18px; }
+  .desp-field{ display:flex; flex-direction:column; gap:6px; }
+  .desp-field label{ font-size:12.5px; font-weight:500; color:var(--coffee-soft); }
+  .desp-field label .req{ color:var(--rose); }
+
+  .desp-field-input, .desp-field-select, .desp-field-textarea{
+    font-family:'Inter',sans-serif; font-size:13.5px; color:var(--coffee);
+    background:var(--cream); border:1px solid var(--line-strong); border-radius:9px;
+    padding:10px 12px; outline:none; width:100%; transition:border-color .15s ease, background .15s ease;
+  }
+  .desp-field-input::placeholder, .desp-field-textarea::placeholder{ color:var(--coffee-faint); }
+  .desp-field-input:focus, .desp-field-select:focus, .desp-field-textarea:focus{ border-color:var(--rose-deep); background:var(--paper); }
+  .desp-field-textarea{ resize:vertical; min-height:70px; font-family:'Inter',sans-serif; }
+  .desp-field-select{
+    appearance:none; -webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237A645E' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat; background-position:right 12px center; padding-right:32px;
+  }
+
+  .desp-cat-add-row{ display:none; gap:8px; margin-top:8px; }
+  .desp-cat-add-row.is-visible{ display:flex; }
+  .desp-cat-add-row input{ flex:1; }
+
+  .desp-recorrencia-box{
+    background:var(--cream); border:1px solid var(--line); border-radius:11px;
+    padding:14px 16px; display:none; flex-direction:column; gap:10px;
+  }
+  .desp-recorrencia-box.is-visible{ display:flex; }
+  .desp-recorrencia-box .desp-rec-label{
+    font-size:11px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--coffee-faint);
+  }
+  .desp-rec-opts{ display:flex; flex-direction:column; gap:8px; }
+  .desp-rec-opt{ display:flex; align-items:flex-start; gap:9px; cursor:pointer; }
+  .desp-rec-opt input{ margin-top:3px; width:15px; height:15px; accent-color:var(--rose-deep); cursor:pointer; flex-shrink:0; }
+  .desp-rec-opt-text .t{ font-size:13px; font-weight:500; color:var(--coffee); }
+  .desp-rec-opt-text .s{ font-size:11.5px; color:var(--coffee-faint); margin-top:2px; }
+  .desp-rec-meses{ display:none; margin-top:2px; max-width:200px; }
+  .desp-rec-meses.is-visible{ display:block; }
+
   /* ===== BOTÃO MENU MOBILE ===== */
   .mobile-menu-btn{
     display:none;
@@ -1616,6 +1771,8 @@
     .view-item.span-2{ grid-column: span 1; }
     .ped-view-grid{ grid-template-columns: 1fr; }
     .ped-view-item.span-2{ grid-column: span 1; }
+    .desp-metric-row{ grid-template-columns: repeat(2,1fr); }
+    .desp-field-row{ grid-template-columns: 1fr; }
   }
 
   @media (max-width: 640px){
@@ -1641,6 +1798,8 @@
     .pedidos-table tbody td:nth-child(4),
     .pedidos-table thead th:nth-child(5),
     .pedidos-table tbody td:nth-child(5){ display:none; }
+    .despesas-table thead th:nth-child(2),
+    .despesas-table tbody td:nth-child(2){ display:none; }
     .form-card{ padding: 18px 14px 22px; }
     .modal-box{ max-width:100%; border-radius:12px; }
     .modal-body{ padding:16px; }
@@ -1665,6 +1824,7 @@
     .metric-row{ grid-template-columns: 1fr; }
     .prod-grid{ grid-template-columns: 1fr; }
     .prod-empty{ grid-column:span 1; }
+    .desp-metric-row{ grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -1733,6 +1893,15 @@
           <span class="dot"></span>
           <i class="icon ti ti-package"></i>
           <span>Estoque</span>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Financeiro</div>
+        <div class="nav-item" data-page="despesas">
+          <span class="dot"></span>
+          <i class="icon ti ti-receipt-2"></i>
+          <span>Despesas</span>
         </div>
       </div>
     </nav>
@@ -2323,6 +2492,74 @@
         </div>
       </div>
 
+      <!-- ===== VIEW: Despesas (Financeiro) ===== -->
+      <div class="view" id="view-despesas">
+
+        <div class="desp-metric-row">
+          <div class="desp-metric-card">
+            <p class="dm-label">Total do mês</p>
+            <div class="dm-value" id="desp-m-total" style="color:var(--rose-deep);">R$ 0,00</div>
+            <div class="dm-sub" id="desp-m-total-sub">0 lançamento(s)</div>
+          </div>
+          <div class="desp-metric-card">
+            <p class="dm-label">Pago</p>
+            <div class="dm-value" id="desp-m-pago" style="color:#2E8B4F;">R$ 0,00</div>
+            <div class="dm-sub" id="desp-m-pago-sub">0% do total</div>
+          </div>
+          <div class="desp-metric-card">
+            <p class="dm-label">A pagar</p>
+            <div class="dm-value" id="desp-m-apagar" style="color:#C9974C;">R$ 0,00</div>
+            <div class="dm-sub" id="desp-m-apagar-sub">0 em aberto</div>
+          </div>
+          <div class="desp-metric-card">
+            <p class="dm-label">Recorrentes</p>
+            <div class="dm-value" id="desp-m-recorrentes" style="color:#0369A1;">R$ 0,00</div>
+            <div class="dm-sub">custos fixos do mês</div>
+          </div>
+        </div>
+
+        <div class="desp-toolbar">
+          <div class="desp-month-nav">
+            <button class="desp-month-btn" id="desp-month-prev" type="button"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+            <span class="desp-month-label" id="desp-month-label">—</span>
+            <button class="desp-month-btn" id="desp-month-next" type="button"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+          </div>
+          <div class="prod-search" style="max-width:280px;">
+            <i class="ti ti-search" aria-hidden="true"></i>
+            <input type="text" id="desp-search-input" placeholder="Buscar despesa...">
+          </div>
+          <select class="desp-status-filter" id="desp-status-filter">
+            <option value="todos">Todos os status</option>
+            <option value="a_pagar">A pagar</option>
+            <option value="pago">Pago</option>
+          </select>
+          <button class="btn-primary" id="btn-nova-despesa" style="margin-left:auto; white-space:nowrap;">
+            <i class="ti ti-plus" aria-hidden="true"></i> Nova despesa
+          </button>
+        </div>
+
+        <div class="despesas-table-wrap">
+          <table class="despesas-table" id="despesas-table">
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th>Categoria</th>
+                <th>Tipo</th>
+                <th>Vencimento</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th class="col-actions">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="despesas-tbody"></tbody>
+          </table>
+          <div class="despesas-empty" id="despesas-empty">
+            <i class="ti ti-receipt-2" aria-hidden="true"></i>
+            <p>Nenhuma despesa cadastrada para este mês.</p>
+          </div>
+        </div>
+      </div>
+
     </div>
   </main>
 
@@ -2487,6 +2724,100 @@
   </div>
 </div>
 
+<!-- ===== Modal de despesa ===== -->
+<div class="desp-modal-overlay" id="desp-modal">
+  <div class="desp-modal-box">
+    <div class="desp-modal-head">
+      <div>
+        <p class="desp-modal-eyebrow">Financeiro</p>
+        <h2 id="desp-modal-title">Nova despesa</h2>
+      </div>
+      <button class="modal-close" id="desp-modal-close" type="button"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="desp-modal-body">
+
+      <div class="desp-field">
+        <label>Descrição <span class="req">*</span></label>
+        <input type="text" class="desp-field-input" id="desp-descricao" placeholder="Ex: Conta de energia">
+      </div>
+
+      <div class="desp-field-row">
+        <div class="desp-field">
+          <label>Categoria</label>
+          <select class="desp-field-select" id="desp-categoria"></select>
+          <div class="desp-cat-add-row" id="desp-cat-add-row">
+            <input type="text" class="desp-field-input" id="desp-cat-nova" placeholder="Nome da nova categoria">
+            <button type="button" class="btn-secondary" id="desp-cat-cancelar" style="padding:10px 12px;">Cancelar</button>
+            <button type="button" class="btn-primary" id="desp-cat-confirmar" style="padding:10px 14px;"><i class="ti ti-check" aria-hidden="true"></i></button>
+          </div>
+        </div>
+        <div class="desp-field">
+          <label>Tipo</label>
+          <select class="desp-field-select" id="desp-tipo">
+            <option value="pontual">Pontual</option>
+            <option value="recorrente">Recorrente</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="desp-field-row">
+        <div class="desp-field">
+          <label id="desp-vencimento-label">Vencimento</label>
+          <input type="date" class="desp-field-input" id="desp-vencimento">
+        </div>
+        <div class="desp-field">
+          <label>Valor (R$) <span class="req">*</span></label>
+          <input type="text" inputmode="decimal" class="desp-field-input" id="desp-valor" placeholder="0,00">
+        </div>
+      </div>
+
+      <div class="desp-recorrencia-box" id="desp-recorrencia-box">
+        <span class="desp-rec-label">Recorrência</span>
+        <div class="desp-rec-opts">
+          <label class="desp-rec-opt">
+            <input type="radio" name="desp-rec-modo" value="continua" id="desp-rec-continua" checked>
+            <span class="desp-rec-opt-text">
+              <div class="t">Sem prazo (contínua)</div>
+              <div class="s">Contínua: o sistema lança os próximos meses automaticamente.</div>
+            </span>
+          </label>
+          <label class="desp-rec-opt">
+            <input type="radio" name="desp-rec-modo" value="determinado" id="desp-rec-determinado">
+            <span class="desp-rec-opt-text">
+              <div class="t">Tempo determinado</div>
+              <div class="s">Escolha por quantos meses a despesa se repetirá.</div>
+            </span>
+          </label>
+        </div>
+        <div class="desp-field desp-rec-meses" id="desp-rec-meses">
+          <label>Quantidade de meses</label>
+          <input type="number" min="2" value="2" class="desp-field-input" id="desp-rec-meses-qtd">
+        </div>
+      </div>
+
+      <div class="desp-field-row">
+        <div class="desp-field">
+          <label>Status</label>
+          <select class="desp-field-select" id="desp-status">
+            <option value="a_pagar">A pagar</option>
+            <option value="pago">Pago</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="desp-field">
+        <label>Observações</label>
+        <textarea class="desp-field-textarea" id="desp-observacoes" placeholder="Detalhes adicionais sobre a despesa..."></textarea>
+      </div>
+
+    </div>
+    <div class="desp-modal-foot">
+      <button class="btn-secondary" id="desp-modal-cancel" type="button">Cancelar</button>
+      <button class="btn-primary" id="desp-modal-save" type="button"><i class="ti ti-check" aria-hidden="true"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== Modal de cliente ===== (já existente abaixo) -->
 <div class="modal-overlay" id="client-modal">
   <div class="modal-box modal-mode-view" id="modal-box">
@@ -2560,7 +2891,8 @@
     'cadastrar-cliente': { title: 'Cadastrar cliente', eyebrow: 'Clientes' },
     'clientes': { title: 'Clientes', eyebrow: 'Clientes' },
     'produtos': { title: 'Produtos', eyebrow: 'Produtos' },
-    'estoque': { title: 'Estoque', eyebrow: 'Produtos' }
+    'estoque': { title: 'Estoque', eyebrow: 'Produtos' },
+    'despesas': { title: 'Despesas', eyebrow: 'Financeiro' }
   };
 
   /* ===== Expor showPage globalmente ===== */
@@ -4846,6 +5178,424 @@
   renderPedidos();
   renderKanban();
   renderDashboard();
+
+})();
+
+/* ===================================================== */
+/* ===== Página: Despesas (Financeiro) ===== */
+/* ===================================================== */
+(function(){
+  var tbody = document.getElementById('despesas-tbody');
+  if (!tbody) return;
+
+  var mesesNomes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  function fmtMoney(v){ return 'R$ ' + parseFloat(v || 0).toFixed(2).replace('.', ','); }
+  function parseMoney(v){ return parseFloat((v || '0').replace(/[^\d,]/g, '').replace(',', '.')) || 0; }
+  function fmtDateBR(iso){
+    if (!iso) return '—';
+    var parts = iso.split('-');
+    if (parts.length !== 3) return iso;
+    return parts[2] + '/' + parts[1] + '/' + parts[0];
+  }
+  function pad2(n){ return n < 10 ? '0' + n : '' + n; }
+  function isoToday(){
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+  function addMonthsToISO(iso, n){
+    var parts = iso.split('-').map(function(x){ return parseInt(x, 10); });
+    var y = parts[0], m = parts[1] - 1, d = parts[2];
+    var target = new Date(y, m + n, 1);
+    var lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+    var day = Math.min(d, lastDay);
+    return target.getFullYear() + '-' + pad2(target.getMonth() + 1) + '-' + pad2(day);
+  }
+
+  /* ---- categorias (Firestore) ---- */
+  var categorias = [];
+  var categoriasSeeded = false;
+  var defaultCategorias = ['Infraestrutura', 'Impostos', 'Marketing', 'Insumos', 'Serviços', 'Outros'];
+
+  (function iniciarSyncCategorias(){
+    function tentar(){
+      if (!window.__db || !window.__fsModules){ setTimeout(tentar, 200); return; }
+      var { collection, onSnapshot, addDoc } = window.__fsModules;
+      onSnapshot(collection(window.__db, 'despesas_categorias'), function(snap){
+        categorias = [];
+        snap.forEach(function(d){ categorias.push(Object.assign({ id: d.id }, d.data())); });
+        if (categorias.length === 0 && !categoriasSeeded){
+          categoriasSeeded = true;
+          defaultCategorias.forEach(function(nome){
+            addDoc(collection(window.__db, 'despesas_categorias'), { nome: nome }).catch(function(){});
+          });
+        }
+        categorias.sort(function(a, b){ return (a.nome || '').localeCompare(b.nome || ''); });
+        renderCategoriaOptions();
+      });
+    }
+    tentar();
+  })();
+
+  function renderCategoriaOptions(){
+    var sel = document.getElementById('desp-categoria');
+    var current = sel.value;
+    sel.innerHTML = '';
+    categorias.forEach(function(c){
+      var opt = document.createElement('option');
+      opt.value = c.nome;
+      opt.textContent = c.nome;
+      sel.appendChild(opt);
+    });
+    var addOpt = document.createElement('option');
+    addOpt.value = '__nova__';
+    addOpt.textContent = '+ Adicionar nova categoria';
+    sel.appendChild(addOpt);
+    if (current && categorias.some(function(c){ return c.nome === current; })) sel.value = current;
+  }
+
+  document.getElementById('desp-categoria').addEventListener('change', function(){
+    var addRow = document.getElementById('desp-cat-add-row');
+    if (this.value === '__nova__'){
+      addRow.classList.add('is-visible');
+      document.getElementById('desp-cat-nova').value = '';
+      document.getElementById('desp-cat-nova').focus();
+    } else {
+      addRow.classList.remove('is-visible');
+    }
+  });
+
+  document.getElementById('desp-cat-cancelar').addEventListener('click', function(){
+    document.getElementById('desp-cat-add-row').classList.remove('is-visible');
+    if (categorias.length) document.getElementById('desp-categoria').value = categorias[0].nome;
+  });
+
+  document.getElementById('desp-cat-confirmar').addEventListener('click', function(){
+    var nome = document.getElementById('desp-cat-nova').value.trim();
+    if (!nome){ document.getElementById('desp-cat-nova').focus(); return; }
+    if (!window.__db || !window.__fsModules) return;
+    var { collection, addDoc } = window.__fsModules;
+    addDoc(collection(window.__db, 'despesas_categorias'), { nome: nome })
+      .then(function(){
+        document.getElementById('desp-cat-add-row').classList.remove('is-visible');
+        document.getElementById('desp-categoria').value = nome;
+      })
+      .catch(function(err){ alert('Erro ao criar categoria: ' + err.message); });
+  });
+
+  /* ---- despesas (Firestore) ---- */
+  var despesas = [];
+
+  (function iniciarSyncDespesas(){
+    function tentar(){
+      if (!window.__db || !window.__fsModules){ setTimeout(tentar, 200); return; }
+      var { collection, onSnapshot } = window.__fsModules;
+      onSnapshot(collection(window.__db, 'despesas'), function(snap){
+        despesas = [];
+        snap.forEach(function(d){ despesas.push(Object.assign({ docId: d.id }, d.data())); });
+        despesas.sort(function(a, b){ return (a.vencimento || '').localeCompare(b.vencimento || ''); });
+        renderDespesas();
+      });
+    }
+    tentar();
+  })();
+
+  /* ---- estado de navegação de mês / filtros ---- */
+  var now = new Date();
+  var viewYear = now.getFullYear();
+  var viewMonth = now.getMonth(); // 0-11
+  var searchTerm = '';
+  var statusFilter = 'todos';
+
+  function updateMonthLabel(){
+    document.getElementById('desp-month-label').textContent = mesesNomes[viewMonth] + ' ' + viewYear;
+  }
+
+  document.getElementById('desp-month-prev').addEventListener('click', function(){
+    viewMonth--;
+    if (viewMonth < 0){ viewMonth = 11; viewYear--; }
+    updateMonthLabel();
+    renderDespesas();
+  });
+  document.getElementById('desp-month-next').addEventListener('click', function(){
+    viewMonth++;
+    if (viewMonth > 11){ viewMonth = 0; viewYear++; }
+    updateMonthLabel();
+    renderDespesas();
+  });
+
+  document.getElementById('desp-search-input').addEventListener('input', function(){
+    searchTerm = this.value;
+    renderDespesas();
+  });
+  document.getElementById('desp-status-filter').addEventListener('change', function(){
+    statusFilter = this.value;
+    renderDespesas();
+  });
+
+  /* ---- máscara de valor ---- */
+  var valorInput = document.getElementById('desp-valor');
+  valorInput.addEventListener('input', function(){
+    var digits = valorInput.value.replace(/\D/g, '');
+    if (!digits){ valorInput.value = ''; return; }
+    var val = parseInt(digits, 10) / 100;
+    valorInput.value = val.toFixed(2).replace('.', ',');
+  });
+
+  /* ---- tipo: pontual x recorrente ---- */
+  var tipoSelect = document.getElementById('desp-tipo');
+  var recBox = document.getElementById('desp-recorrencia-box');
+  var vencLabel = document.getElementById('desp-vencimento-label');
+
+  function updateTipoUI(){
+    var recorrente = tipoSelect.value === 'recorrente';
+    recBox.classList.toggle('is-visible', recorrente);
+    vencLabel.textContent = recorrente ? 'Primeiro vencimento' : 'Vencimento';
+  }
+  tipoSelect.addEventListener('change', updateTipoUI);
+
+  document.querySelectorAll('input[name="desp-rec-modo"]').forEach(function(radio){
+    radio.addEventListener('change', function(){
+      var mesesField = document.getElementById('desp-rec-meses');
+      mesesField.classList.toggle('is-visible', document.getElementById('desp-rec-determinado').checked);
+    });
+  });
+
+  /* ---- render tabela + métricas ---- */
+  function despesasDoMes(){
+    return despesas.filter(function(d){
+      if (!d.vencimento) return false;
+      var parts = d.vencimento.split('-');
+      var y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1;
+      return y === viewYear && m === viewMonth;
+    });
+  }
+
+  function renderMetricas(list){
+    var total = 0, pago = 0, aPagar = 0, aPagarCount = 0, recorrentes = 0;
+    list.forEach(function(d){
+      var v = parseFloat(d.valor) || 0;
+      total += v;
+      if (d.status === 'pago') pago += v;
+      else { aPagar += v; aPagarCount++; }
+      if (d.tipo === 'recorrente') recorrentes += v;
+    });
+    document.getElementById('desp-m-total').textContent = fmtMoney(total);
+    document.getElementById('desp-m-total-sub').textContent = list.length + (list.length === 1 ? ' lançamento' : ' lançamentos');
+    document.getElementById('desp-m-pago').textContent = fmtMoney(pago);
+    document.getElementById('desp-m-pago-sub').textContent = (total > 0 ? Math.round((pago / total) * 100) : 0) + '% do total';
+    document.getElementById('desp-m-apagar').textContent = fmtMoney(aPagar);
+    document.getElementById('desp-m-apagar-sub').textContent = aPagarCount + (aPagarCount === 1 ? ' em aberto' : ' em aberto');
+    document.getElementById('desp-m-recorrentes').textContent = fmtMoney(recorrentes);
+  }
+
+  function renderDespesas(){
+    updateMonthLabel();
+    var list = despesasDoMes();
+
+    renderMetricas(list);
+
+    var term = searchTerm.trim().toLowerCase();
+    var filtered = list.filter(function(d){
+      var matchSearch = !term || (d.descricao || '').toLowerCase().indexOf(term) !== -1 || (d.categoria || '').toLowerCase().indexOf(term) !== -1;
+      var matchStatus = statusFilter === 'todos' || d.status === statusFilter;
+      return matchSearch && matchStatus;
+    });
+
+    var tableEl = document.getElementById('despesas-table');
+    var emptyEl = document.getElementById('despesas-empty');
+    tbody.innerHTML = '';
+
+    if (filtered.length === 0){
+      tableEl.style.display = 'none';
+      emptyEl.style.display = 'block';
+      return;
+    }
+    tableEl.style.display = 'table';
+    emptyEl.style.display = 'none';
+
+    filtered.forEach(function(d){
+      var tr = document.createElement('tr');
+      var tipoLabel = d.tipo === 'recorrente' ? 'Recorrente' : 'Pontual';
+      var tipoClass = d.tipo === 'recorrente' ? 'recorrente' : 'pontual';
+      var isPago = d.status === 'pago';
+
+      tr.innerHTML =
+        '<td>' + (d.descricao || '—') + '</td>' +
+        '<td><span class="desp-cat-pill">' + (d.categoria || '—') + '</span></td>' +
+        '<td><span class="desp-tipo-pill ' + tipoClass + '">' + tipoLabel + '</span></td>' +
+        '<td>' + fmtDateBR(d.vencimento) + '</td>' +
+        '<td class="desp-value-cell">' + fmtMoney(d.valor) + '</td>' +
+        '<td>' +
+          '<button type="button" class="desp-status-toggle' + (isPago ? ' is-pago' : '') + '" data-action="toggle-status" data-id="' + d.docId + '">' +
+            '<span class="desp-switch"></span>' +
+            '<span class="desp-status-text">' + (isPago ? 'Pago' : 'A pagar') + '</span>' +
+          '</button>' +
+        '</td>' +
+        '<td class="desp-actions-cell">' +
+          '<button class="action-btn view" title="Editar despesa" data-action="edit" data-id="' + d.docId + '"><i class="ti ti-pencil" aria-hidden="true"></i></button>' +
+          '<button class="action-btn delete" title="Excluir despesa" data-action="delete" data-id="' + d.docId + '"><i class="ti ti-trash" aria-hidden="true"></i></button>' +
+        '</td>';
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  tbody.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    var action = btn.getAttribute('data-action');
+    var id = btn.getAttribute('data-id');
+    var d = despesas.find(function(x){ return x.docId === id; });
+    if (!d) return;
+
+    var { doc, updateDoc, deleteDoc } = window.__fsModules;
+
+    if (action === 'toggle-status'){
+      var novoStatus = d.status === 'pago' ? 'a_pagar' : 'pago';
+      updateDoc(doc(window.__db, 'despesas', id), { status: novoStatus })
+        .catch(function(err){ alert('Erro ao atualizar status: ' + err.message); });
+    } else if (action === 'edit'){
+      openModal(d);
+    } else if (action === 'delete'){
+      if (!window.confirm('Excluir a despesa "' + (d.descricao || '') + '"? Essa ação não pode ser desfeita.')) return;
+      deleteDoc(doc(window.__db, 'despesas', id))
+        .catch(function(err){ alert('Erro ao excluir: ' + err.message); });
+    }
+  });
+
+  /* ---- modal de nova/editar despesa ---- */
+  var modal = document.getElementById('desp-modal');
+  var editingId = null;
+
+  function resetModalFields(){
+    document.getElementById('desp-descricao').value = '';
+    if (categorias.length) document.getElementById('desp-categoria').value = categorias[0].nome;
+    document.getElementById('desp-cat-add-row').classList.remove('is-visible');
+    document.getElementById('desp-tipo').value = 'pontual';
+    document.getElementById('desp-vencimento').value = isoToday();
+    document.getElementById('desp-valor').value = '';
+    document.getElementById('desp-status').value = 'a_pagar';
+    document.getElementById('desp-observacoes').value = '';
+    document.getElementById('desp-rec-continua').checked = true;
+    document.getElementById('desp-rec-meses').classList.remove('is-visible');
+    document.getElementById('desp-rec-meses-qtd').value = 2;
+    updateTipoUI();
+  }
+
+  function openModal(d){
+    editingId = d ? d.docId : null;
+    document.getElementById('desp-modal-title').textContent = d ? 'Editar despesa' : 'Nova despesa';
+    resetModalFields();
+
+    if (d){
+      document.getElementById('desp-descricao').value = d.descricao || '';
+      if (d.categoria) document.getElementById('desp-categoria').value = d.categoria;
+      document.getElementById('desp-tipo').value = d.tipo || 'pontual';
+      document.getElementById('desp-vencimento').value = d.vencimento || isoToday();
+      document.getElementById('desp-valor').value = (parseFloat(d.valor) || 0).toFixed(2).replace('.', ',');
+      document.getElementById('desp-status').value = d.status || 'a_pagar';
+      document.getElementById('desp-observacoes').value = d.observacoes || '';
+      if (d.recorrencia && d.recorrencia.modo === 'determinado'){
+        document.getElementById('desp-rec-determinado').checked = true;
+        document.getElementById('desp-rec-meses').classList.add('is-visible');
+        document.getElementById('desp-rec-meses-qtd').value = d.recorrencia.meses || 2;
+      }
+      updateTipoUI();
+    }
+
+    modal.classList.add('is-open');
+  }
+
+  function closeModal(){
+    modal.classList.remove('is-open');
+    editingId = null;
+  }
+
+  document.getElementById('btn-nova-despesa').addEventListener('click', function(){ openModal(null); });
+  document.getElementById('desp-modal-close').addEventListener('click', closeModal);
+  document.getElementById('desp-modal-cancel').addEventListener('click', closeModal);
+  modal.addEventListener('click', function(e){ if (e.target === modal) closeModal(); });
+
+  document.getElementById('desp-modal-save').addEventListener('click', function(){
+    var descricao = document.getElementById('desp-descricao').value.trim();
+    var valor = parseMoney(document.getElementById('desp-valor').value);
+    var vencimento = document.getElementById('desp-vencimento').value;
+
+    if (!descricao){ document.getElementById('desp-descricao').focus(); return; }
+    if (!valor){ document.getElementById('desp-valor').focus(); return; }
+    if (!vencimento){ document.getElementById('desp-vencimento').focus(); return; }
+
+    var categoriaSel = document.getElementById('desp-categoria').value;
+    if (categoriaSel === '__nova__'){
+      alert('Confirme ou cancele a nova categoria antes de salvar.');
+      return;
+    }
+
+    var base = {
+      descricao: descricao,
+      categoria: categoriaSel || '',
+      tipo: document.getElementById('desp-tipo').value,
+      valor: valor,
+      status: document.getElementById('desp-status').value,
+      observacoes: document.getElementById('desp-observacoes').value.trim()
+    };
+
+    var { collection, addDoc, doc, updateDoc } = window.__fsModules;
+
+    /* edição: atualiza apenas o lançamento selecionado */
+    if (editingId){
+      var updates = Object.assign({}, base, { vencimento: vencimento });
+      updateDoc(doc(window.__db, 'despesas', editingId), updates)
+        .then(closeModal)
+        .catch(function(err){ alert('Erro ao salvar: ' + err.message); });
+      return;
+    }
+
+    /* nova despesa pontual */
+    if (base.tipo === 'pontual'){
+      addDoc(collection(window.__db, 'despesas'), Object.assign({}, base, { vencimento: vencimento, recorrencia: null }))
+        .then(closeModal)
+        .catch(function(err){ alert('Erro ao salvar: ' + err.message); });
+      return;
+    }
+
+    /* nova despesa recorrente: gera os lançamentos dos próximos meses */
+    var modo = document.getElementById('desp-rec-determinado').checked ? 'determinado' : 'continua';
+    var totalMeses;
+    if (modo === 'determinado'){
+      totalMeses = Math.max(1, parseInt(document.getElementById('desp-rec-meses-qtd').value, 10) || 1);
+    } else {
+      /* recorrência contínua: gera automaticamente um lote de meses à frente;
+         o sistema mantém o lançamento se repetindo mês a mês sem prazo definido */
+      totalMeses = 24;
+    }
+
+    var recorrenciaId = 'rec_' + Date.now() + Math.random().toString(36).slice(2, 6);
+    var promessas = [];
+    for (var i = 0; i < totalMeses; i++){
+      var venc = i === 0 ? vencimento : addMonthsToISO(vencimento, i);
+      var doc_i = Object.assign({}, base, {
+        vencimento: venc,
+        status: i === 0 ? base.status : 'a_pagar',
+        recorrencia: { modo: modo, meses: modo === 'determinado' ? totalMeses : null, id: recorrenciaId, indice: i }
+      });
+      promessas.push(addDoc(collection(window.__db, 'despesas'), doc_i));
+    }
+    Promise.all(promessas)
+      .then(closeModal)
+      .catch(function(err){ alert('Erro ao salvar recorrência: ' + err.message); });
+  });
+
+  /* re-renderizar ao entrar na página */
+  document.querySelectorAll('.nav-item').forEach(function(item){
+    item.addEventListener('click', function(){
+      if (item.getAttribute('data-page') === 'despesas') renderDespesas();
+    });
+  });
+
+  updateMonthLabel();
+  renderDespesas();
 
 })();
 </script>

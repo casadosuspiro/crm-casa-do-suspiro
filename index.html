@@ -1457,6 +1457,58 @@
   .pedidos-empty .ti{ font-size:30px; display:block; margin-bottom:10px; }
   .pedidos-empty p{ margin:0; font-size:13px; }
 
+  /* ===== Relatórios ===== */
+  .rel-period-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:14px; flex-wrap:wrap; margin-bottom:18px;
+  }
+  .rel-period-bar .type-toggle{ flex:1; min-width:320px; margin-bottom:0; }
+  .rel-period-bar .type-btn{ padding:9px 6px; font-size:12.5px; }
+
+  .rel-period-nav{ display:flex; align-items:center; gap:6px; }
+  .rel-nav-btn{
+    width:30px; height:30px; border-radius:8px; flex-shrink:0;
+    border:1px solid var(--line-strong); background:var(--paper);
+    color:var(--coffee-soft); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:14px; transition:all 0.15s ease;
+  }
+  .rel-nav-btn:hover{ border-color:var(--rose-deep); color:var(--rose-deep); }
+  .rel-period-current{
+    display:flex; align-items:center; gap:7px;
+    padding:7px 12px; border-radius:8px;
+    border:1px solid var(--line-strong); background:var(--paper);
+    color:var(--coffee); font-size:12.5px; font-weight:600;
+    cursor:pointer; white-space:nowrap; position:relative;
+  }
+  .rel-period-current:hover{ border-color:var(--rose-deep); }
+  .rel-period-current .ti{ font-size:15px; color:var(--rose-deep); }
+  .rel-period-date-input{
+    position:absolute; opacity:0; width:1px; height:1px;
+    pointer-events:none; border:none; padding:0;
+  }
+
+  .rel-metric-row{ grid-template-columns: repeat(3, 1fr); }
+
+  .rel-cliente-stats{
+    display:flex; gap:10px; flex-wrap:wrap;
+    padding-bottom:16px; margin-bottom:6px; border-bottom:1px solid var(--line);
+  }
+  .rel-stat-chip{
+    flex:1; min-width:110px; background:var(--cream);
+    border:1px solid var(--line); border-radius:10px; padding:10px 12px;
+  }
+  .rel-stat-chip .rsc-label{
+    font-size:10.5px; color:var(--coffee-faint); text-transform:uppercase;
+    letter-spacing:.4px; margin-bottom:4px;
+  }
+  .rel-stat-chip .rsc-value{ font-size:14px; font-weight:600; color:var(--coffee); }
+
+  @media (max-width: 640px){
+    .rel-period-bar .type-toggle{ flex-direction:row; flex-wrap:wrap; }
+    .rel-period-bar .type-btn{ flex:1 1 30%; }
+    .rel-metric-row{ grid-template-columns: repeat(2, 1fr); }
+  }
+
   /* ===== Modal visualizar pedido ===== */
   .ped-view-modal-overlay{
     display:none; position:fixed; inset:0;
@@ -1865,6 +1917,11 @@
           <span class="dot"></span>
           <i class="icon ti ti-truck-delivery"></i>
           <span>Status dos pedidos</span>
+        </div>
+        <div class="nav-item" data-page="relatorios">
+          <span class="dot"></span>
+          <i class="icon ti ti-chart-bar"></i>
+          <span>Relatórios</span>
         </div>
       </div>
 
@@ -2477,6 +2534,78 @@
           </div>
         </div>
       </div>
+      <!-- ===== VIEW: Relatórios ===== -->
+      <div class="view" id="view-relatorios">
+        <div class="rel-period-bar">
+          <div class="type-toggle" id="rel-period-toggle">
+            <button type="button" class="type-btn" data-period="dia">Dia</button>
+            <button type="button" class="type-btn" data-period="semana">Semana</button>
+            <button type="button" class="type-btn is-active" data-period="mes">Mês</button>
+            <button type="button" class="type-btn" data-period="trimestre">Trimestre</button>
+            <button type="button" class="type-btn" data-period="semestre">Semestre</button>
+            <button type="button" class="type-btn" data-period="anual">Anual</button>
+          </div>
+          <div class="rel-period-nav">
+            <button type="button" class="rel-nav-btn" id="rel-nav-prev" aria-label="Período anterior"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+            <div class="rel-period-current" id="rel-period-current">
+              <i class="ti ti-calendar-event" aria-hidden="true"></i>
+              <span id="rel-period-range"></span>
+              <input type="date" id="rel-period-date-input" class="rel-period-date-input" aria-label="Escolher data ou mês">
+            </div>
+            <button type="button" class="rel-nav-btn" id="rel-nav-next" aria-label="Próximo período"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+          </div>
+        </div>
+
+        <div class="metric-row rel-metric-row">
+          <div class="metric-card">
+            <p class="m-label">Pedidos realizados</p>
+            <div class="m-value" id="rel-qtd-pedidos">0</div>
+            <div class="m-sub" id="rel-qtd-pedidos-sub"></div>
+          </div>
+          <div class="metric-card">
+            <p class="m-label">Faturamento total</p>
+            <div class="m-value" id="rel-faturamento">R$ 0,00</div>
+            <div class="m-sub" id="rel-faturamento-sub"></div>
+          </div>
+          <div class="metric-card">
+            <p class="m-label">Valor médio do pedido</p>
+            <div class="m-value" id="rel-ticket-medio">R$ 0,00</div>
+            <div class="m-sub" id="rel-ticket-medio-sub"></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:14px;">
+          <div class="panel-head">
+            <h3>Produtos mais pedidos</h3>
+            <span class="tag" id="rel-produtos-tag">no período</span>
+          </div>
+          <div class="list-rows" id="rel-top-produtos-list"></div>
+        </div>
+
+        <div class="panel-head" style="margin-bottom:14px;">
+          <h3>Ranking por cliente</h3>
+          <span class="tag" id="rel-ranking-tag">no período</span>
+        </div>
+        <div class="pedidos-table-wrap">
+          <table class="pedidos-table" id="rel-rank-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Cliente</th>
+                <th>Faturamento</th>
+                <th>Pedidos</th>
+                <th>Intervalo entre pedidos</th>
+              </tr>
+            </thead>
+            <tbody id="rel-rank-tbody"></tbody>
+          </table>
+          <div class="pedidos-empty" id="rel-rank-empty">
+            <i class="ti ti-chart-bar"></i>
+            <p>Nenhum pedido no período selecionado.</p>
+          </div>
+        </div>
+      </div>
+
       <div class="view" id="view-estoque">
         <div class="estq-toolbar">
           <div class="prod-search" style="max-width:340px;">
@@ -2641,6 +2770,23 @@
     </div>
     <div class="estq-modal-body">
       <div class="estq-hist-list" id="cliente-pedidos-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal de detalhes do cliente (Relatórios) ===== -->
+<div class="estq-modal-overlay" id="rel-cliente-modal">
+  <div class="estq-modal-box" style="max-width:480px;">
+    <div class="estq-modal-head">
+      <div class="estq-modal-head-info">
+        <h2 id="rel-cliente-modal-title">Detalhes do cliente</h2>
+        <span class="estq-modal-sub" id="rel-cliente-modal-sub">—</span>
+      </div>
+      <button class="modal-close" id="rel-cliente-modal-close" type="button"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="estq-modal-body">
+      <div class="rel-cliente-stats" id="rel-cliente-modal-stats"></div>
+      <div class="estq-hist-list" id="rel-cliente-modal-produtos"></div>
     </div>
   </div>
 </div>
@@ -2888,6 +3034,7 @@
     'novo-pedido': { title: 'Novo pedido', eyebrow: 'Pedidos' },
     'pedidos': { title: 'Pedidos', eyebrow: 'Pedidos' },
     'status-pedidos': { title: 'Status dos pedidos', eyebrow: 'Pedidos' },
+    'relatorios': { title: 'Relatórios', eyebrow: 'Pedidos' },
     'cadastrar-cliente': { title: 'Cadastrar cliente', eyebrow: 'Clientes' },
     'clientes': { title: 'Clientes', eyebrow: 'Clientes' },
     'produtos': { title: 'Produtos', eyebrow: 'Produtos' },
@@ -3367,6 +3514,7 @@
         window.__crmClientes = clientes;
         applySearch();
         if (window.__crmRenderDashboard) window.__crmRenderDashboard();
+        if (window.__crmRenderRelatorios) window.__crmRenderRelatorios();
       });
     }
     tentar();
@@ -4148,6 +4296,7 @@
         renderKanban();
         renderDashboard();
         if (window.__crmRefreshClientePedidos) window.__crmRefreshClientePedidos();
+        if (window.__crmRenderRelatorios) window.__crmRenderRelatorios();
       });
     }
     tentar();
@@ -5179,6 +5328,301 @@
   renderKanban();
   renderDashboard();
 
+})();
+
+/* ===================================================== */
+/* ===== Página: Relatórios (Pedidos) ===== */
+/* ===================================================== */
+(function(){
+  var toggleEl = document.getElementById('rel-period-toggle');
+  if (!toggleEl) return;
+
+  var currentPeriod = 'mes';
+  var anchorDate = new Date();
+  var mesesAbrevRel = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  var mesesNomesRel = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  function pad2(n){ return n < 10 ? '0' + n : '' + n; }
+
+  function fmtMoneyRel(v){ return 'R$ ' + parseFloat(v || 0).toFixed(2).replace('.', ','); }
+
+  function fmtDateShortRel(ts){
+    var d = new Date(ts);
+    return pad2(d.getDate()) + ' ' + mesesAbrevRel[d.getMonth()];
+  }
+
+  function fmtDateLongRel(dt){
+    return dt.getDate() + ' de ' + mesesNomesRel[dt.getMonth()].toLowerCase() + ' de ' + dt.getFullYear();
+  }
+
+  function calcIntervalo(entry){
+    if (entry.qtdPedidos <= 1) return 'pedido único';
+    var datasOrd = entry.datas.slice().sort(function(a, b){ return a - b; });
+    var diffDias = (datasOrd[datasOrd.length - 1] - datasOrd[0]) / (1000 * 60 * 60 * 24) / (entry.qtdPedidos - 1);
+    var dias = Math.max(1, Math.round(diffDias));
+    return 'a cada ' + dias + ' dia' + (dias === 1 ? '' : 's');
+  }
+
+  function getPeriodRange(period, anchor){
+    var y = anchor.getFullYear(), m = anchor.getMonth(), d = anchor.getDate();
+    var start, end, label;
+    if (period === 'dia'){
+      start = new Date(y, m, d, 0, 0, 0, 0);
+      end = new Date(y, m, d, 23, 59, 59, 999);
+      label = fmtDateLongRel(start);
+    } else if (period === 'semana'){
+      var diaSemana = anchor.getDay() === 0 ? 6 : anchor.getDay() - 1;
+      start = new Date(y, m, d - diaSemana, 0, 0, 0, 0);
+      end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6, 23, 59, 59, 999);
+      label = fmtDateShortRel(start.getTime()) + ' — ' + fmtDateShortRel(end.getTime());
+    } else if (period === 'mes'){
+      start = new Date(y, m, 1, 0, 0, 0, 0);
+      end = new Date(y, m + 1, 0, 23, 59, 59, 999);
+      label = mesesNomesRel[m] + ' de ' + y;
+    } else if (period === 'trimestre'){
+      var qStart = Math.floor(m / 3) * 3;
+      start = new Date(y, qStart, 1, 0, 0, 0, 0);
+      end = new Date(y, qStart + 3, 0, 23, 59, 59, 999);
+      label = (Math.floor(m / 3) + 1) + 'º trimestre de ' + y;
+    } else if (period === 'semestre'){
+      var sStart = m < 6 ? 0 : 6;
+      start = new Date(y, sStart, 1, 0, 0, 0, 0);
+      end = new Date(y, sStart + 6, 0, 23, 59, 59, 999);
+      label = (sStart === 0 ? '1º' : '2º') + ' semestre de ' + y;
+    } else {
+      start = new Date(y, 0, 1, 0, 0, 0, 0);
+      end = new Date(y, 11, 31, 23, 59, 59, 999);
+      label = String(y);
+    }
+    return { start: start, end: end, label: label };
+  }
+
+  function renderRelatorios(){
+    var pedidos = window.__crmPedidos || [];
+    var range = getPeriodRange(currentPeriod, anchorDate);
+
+    var filtrados = pedidos.filter(function(p){
+      return p.data >= range.start.getTime() && p.data <= range.end.getTime();
+    });
+
+    /* ---- métricas gerais ---- */
+    var qtd = filtrados.length;
+    var faturamento = filtrados.reduce(function(s, p){ return s + (p.total || 0); }, 0);
+    var ticketMedio = qtd ? faturamento / qtd : 0;
+
+    document.getElementById('rel-qtd-pedidos').textContent = qtd;
+    document.getElementById('rel-faturamento').textContent = fmtMoneyRel(faturamento);
+    document.getElementById('rel-ticket-medio').textContent = fmtMoneyRel(ticketMedio);
+    document.getElementById('rel-qtd-pedidos-sub').textContent = range.label;
+    document.getElementById('rel-faturamento-sub').textContent = range.label;
+    document.getElementById('rel-ticket-medio-sub').textContent = range.label;
+    document.getElementById('rel-period-range').textContent = range.label;
+
+    /* ---- produtos mais pedidos ---- */
+    var prodCount = {};
+    filtrados.forEach(function(p){
+      (p.itens || []).forEach(function(it){
+        prodCount[it.nome] = (prodCount[it.nome] || 0) + (it.qtd || 0);
+      });
+    });
+    var sortedProd = Object.keys(prodCount).sort(function(a, b){ return prodCount[b] - prodCount[a]; });
+
+    document.getElementById('rel-produtos-tag').textContent = range.label;
+    var listEl = document.getElementById('rel-top-produtos-list');
+    if (sortedProd.length === 0){
+      listEl.innerHTML = '<div style="text-align:center;padding:30px 0;color:var(--coffee-faint);font-size:13px;">Nenhum pedido no período.</div>';
+    } else {
+      var top5 = sortedProd.slice(0, 5);
+      var maxQ = prodCount[top5[0]];
+      var cores = ['var(--rose-deep)', 'var(--gold)', '#6B469C', '#2E8B4F', '#0369A1'];
+      listEl.innerHTML = top5.map(function(nome, idx){
+        var pct = Math.round((prodCount[nome] / maxQ) * 100);
+        return '<div class="list-row">' +
+          '<span style="font-size:12px;font-weight:600;color:var(--coffee-faint);min-width:16px;">' + (idx + 1) + '</span>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:12.5px;font-weight:500;color:var(--coffee);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + nome + '</div>' +
+            '<div style="height:6px;border-radius:4px;background:var(--cream-deep);margin-top:4px;">' +
+              '<div style="height:100%;border-radius:4px;background:' + cores[idx] + ';width:' + pct + '%;"></div>' +
+            '</div>' +
+          '</div>' +
+          '<span style="font-size:12px;font-weight:600;color:var(--coffee);min-width:28px;text-align:right;">' + prodCount[nome] + '</span>' +
+        '</div>';
+      }).join('');
+    }
+
+    /* ---- ranking por cliente ---- */
+    var clienteMap = {};
+    filtrados.forEach(function(p){
+      var cid = p.clienteId || p.clienteCodigo || 'sem-cliente';
+      if (!clienteMap[cid]){
+        clienteMap[cid] = {
+          clienteId: p.clienteId,
+          codigo: p.clienteCodigo || '—',
+          nome: p.clienteNome || '—',
+          faturamento: 0,
+          qtdPedidos: 0,
+          datas: [],
+          produtos: {}
+        };
+      }
+      var entry = clienteMap[cid];
+      entry.faturamento += (p.total || 0);
+      entry.qtdPedidos += 1;
+      entry.datas.push(p.data);
+      (p.itens || []).forEach(function(it){
+        entry.produtos[it.nome] = (entry.produtos[it.nome] || 0) + (it.qtd || 0);
+      });
+    });
+
+    var ranking = Object.keys(clienteMap).map(function(k){ return clienteMap[k]; });
+    ranking.sort(function(a, b){ return b.faturamento - a.faturamento; });
+
+    var tbody = document.getElementById('rel-rank-tbody');
+    var tableEl = document.getElementById('rel-rank-table');
+    var emptyEl = document.getElementById('rel-rank-empty');
+    document.getElementById('rel-ranking-tag').textContent = range.label;
+
+    tbody.innerHTML = '';
+    if (ranking.length === 0){
+      tableEl.style.display = 'none';
+      emptyEl.style.display = 'block';
+    } else {
+      tableEl.style.display = 'table';
+      emptyEl.style.display = 'none';
+
+      ranking.forEach(function(r){
+        var tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
+        tr.innerHTML =
+          '<td><span class="ped-code-pill">#' + r.codigo + '</span></td>' +
+          '<td>' + r.nome + ' <i class="ti ti-chevron-right" style="float:right;color:var(--coffee-faint);font-size:13px;"></i></td>' +
+          '<td class="ped-value-cell">' + fmtMoneyRel(r.faturamento) + '</td>' +
+          '<td>' + r.qtdPedidos + '</td>' +
+          '<td>' + calcIntervalo(r) + '</td>';
+        tr.addEventListener('click', function(){ openClienteDetalhe(r); });
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  /* ---- modal de detalhes do cliente ---- */
+  var modal = document.getElementById('rel-cliente-modal');
+
+  function openClienteDetalhe(r){
+    document.getElementById('rel-cliente-modal-title').textContent = r.nome;
+    document.getElementById('rel-cliente-modal-sub').textContent = '#' + r.codigo;
+
+    var statsEl = document.getElementById('rel-cliente-modal-stats');
+    statsEl.innerHTML =
+      '<div class="rel-stat-chip"><div class="rsc-label">Faturamento</div><div class="rsc-value">' + fmtMoneyRel(r.faturamento) + '</div></div>' +
+      '<div class="rel-stat-chip"><div class="rsc-label">Pedidos</div><div class="rsc-value">' + r.qtdPedidos + '</div></div>' +
+      '<div class="rel-stat-chip"><div class="rsc-label">Intervalo</div><div class="rsc-value">' + calcIntervalo(r) + '</div></div>';
+
+    var produtosNomes = Object.keys(r.produtos).sort(function(a, b){ return r.produtos[b] - r.produtos[a]; });
+    var listEl = document.getElementById('rel-cliente-modal-produtos');
+    if (produtosNomes.length === 0){
+      listEl.innerHTML = '<div class="estq-hist-empty">Nenhum produto no período.</div>';
+    } else {
+      listEl.innerHTML = produtosNomes.map(function(nome){
+        var vezes = r.produtos[nome];
+        return '<div class="estq-hist-item">' +
+          '<div class="estq-hist-icon add" style="background:var(--rose-pale);color:var(--rose-deep);"><i class="ti ti-cookie"></i></div>' +
+          '<div class="estq-hist-content">' +
+            '<div class="estq-hist-main"><span class="estq-hist-delta" style="color:var(--coffee);">' + nome + '</span></div>' +
+            '<div class="estq-hist-date">Comprado ' + vezes + ' vez' + (vezes === 1 ? '' : 'es') + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    modal.classList.add('is-open');
+  }
+
+  document.getElementById('rel-cliente-modal-close').addEventListener('click', function(){
+    modal.classList.remove('is-open');
+  });
+  modal.addEventListener('click', function(e){ if (e.target === modal) modal.classList.remove('is-open'); });
+
+  /* ---- navegação de período (calendário) ---- */
+  var dateInput = document.getElementById('rel-period-date-input');
+  var currentTrigger = document.getElementById('rel-period-current');
+
+  function updateDateInputType(){
+    dateInput.type = (currentPeriod === 'mes') ? 'month' : 'date';
+  }
+
+  function syncDateInputValue(){
+    var y = anchorDate.getFullYear(), m = anchorDate.getMonth(), d = anchorDate.getDate();
+    dateInput.value = (dateInput.type === 'month')
+      ? (y + '-' + pad2(m + 1))
+      : (y + '-' + pad2(m + 1) + '-' + pad2(d));
+  }
+
+  function shiftAnchor(dir){
+    var y = anchorDate.getFullYear(), m = anchorDate.getMonth(), d = anchorDate.getDate();
+    if (currentPeriod === 'dia'){
+      anchorDate = new Date(y, m, d + dir);
+    } else if (currentPeriod === 'semana'){
+      anchorDate = new Date(y, m, d + dir * 7);
+    } else if (currentPeriod === 'mes'){
+      anchorDate = new Date(y, m + dir, 1);
+    } else if (currentPeriod === 'trimestre'){
+      anchorDate = new Date(y, m + dir * 3, 1);
+    } else if (currentPeriod === 'semestre'){
+      anchorDate = new Date(y, m + dir * 6, 1);
+    } else {
+      anchorDate = new Date(y + dir, 0, 1);
+    }
+    syncDateInputValue();
+    renderRelatorios();
+  }
+
+  document.getElementById('rel-nav-prev').addEventListener('click', function(){ shiftAnchor(-1); });
+  document.getElementById('rel-nav-next').addEventListener('click', function(){ shiftAnchor(1); });
+
+  currentTrigger.addEventListener('click', function(){
+    if (dateInput.showPicker){
+      try { dateInput.showPicker(); } catch (e) { dateInput.focus(); }
+    } else {
+      dateInput.focus();
+    }
+  });
+
+  dateInput.addEventListener('change', function(){
+    if (!dateInput.value) return;
+    var parts = dateInput.value.split('-');
+    if (dateInput.type === 'month'){
+      anchorDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
+    } else {
+      anchorDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    }
+    renderRelatorios();
+  });
+
+  /* ---- seletor de período ---- */
+  toggleEl.querySelectorAll('.type-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      toggleEl.querySelectorAll('.type-btn').forEach(function(b){ b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      currentPeriod = btn.getAttribute('data-period');
+      updateDateInputType();
+      syncDateInputValue();
+      renderRelatorios();
+    });
+  });
+
+  /* ---- expõe globalmente para ser chamado quando os dados mudarem ---- */
+  window.__crmRenderRelatorios = renderRelatorios;
+
+  document.querySelectorAll('.nav-item').forEach(function(item){
+    item.addEventListener('click', function(){
+      if (item.getAttribute('data-page') === 'relatorios') renderRelatorios();
+    });
+  });
+
+  updateDateInputType();
+  syncDateInputValue();
+  renderRelatorios();
 })();
 
 /* ===================================================== */

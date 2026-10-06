@@ -6,6 +6,8 @@
 <title>Casa do Suspiro — CRM</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap');
 
@@ -1878,6 +1880,104 @@
     .prod-empty{ grid-column:span 1; }
     .desp-metric-row{ grid-template-columns: 1fr; }
   }
+
+  /* ===== Clientes: Mapa de clientes ===== */
+  .mapc-toolbar{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    margin-bottom: 12px;
+  }
+  .mapc-toolbar .clients-search{ margin-bottom:0; flex:1; min-width:220px; }
+  .mapc-toggle{
+    display:flex; align-items:center; gap:8px;
+    font-size:13px; color: var(--coffee-soft);
+    cursor:pointer; user-select:none;
+  }
+  .mapc-toggle input{ accent-color: var(--rose); width:15px; height:15px; margin:0; }
+  .mapc-btn{
+    display:inline-flex; align-items:center; gap:7px;
+    background: var(--paper);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:500;
+    color: var(--coffee);
+    cursor:pointer;
+    transition: background .15s ease;
+  }
+  .mapc-btn:hover{ background: var(--rose-pale); }
+  .mapc-btn .ti{ font-size:15px; color: var(--rose-deep); }
+
+  .mapc-layout{
+    display:grid;
+    grid-template-columns: 1fr 310px;
+    gap: 16px;
+    align-items:stretch;
+  }
+  .mapc-map-wrap{
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow:hidden;
+    min-height: 480px;
+    height: calc(100vh - 250px);
+    position:relative;
+  }
+  #mapc-map{ position:absolute; inset:0; font-family:'Inter',sans-serif; background: var(--cream-deep); }
+  .mapc-list-wrap{
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow-y:auto;
+    min-height: 480px;
+    height: calc(100vh - 250px);
+  }
+  .mapc-item{
+    display:flex; align-items:center; gap:11px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    cursor:pointer;
+    transition: background .15s ease;
+  }
+  .mapc-item:last-child{ border-bottom:none; }
+  .mapc-item:hover{ background: var(--rose-pale); }
+  .mapc-item.is-missing{ cursor:default; opacity:.7; }
+  .mapc-item.is-missing:hover{ background: transparent; }
+  .mapc-item-ico{
+    width:30px; height:30px; border-radius:50%;
+    background: var(--rose-pale); color: var(--rose);
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px; flex-shrink:0;
+  }
+  .mapc-item.is-missing .mapc-item-ico{ background: var(--cream-deep); color: var(--coffee-faint); }
+  .mapc-item-name{ font-size:13.5px; font-weight:500; color: var(--coffee); line-height:1.25; }
+  .mapc-item-sub{ font-size:11.5px; color: var(--coffee-faint); margin-top:2px; }
+  .mapc-empty{ padding: 30px 18px; text-align:center; font-size:13px; color: var(--coffee-faint); }
+
+  .mapc-pin{ filter: drop-shadow(0 2px 3px rgba(62,46,42,.35)); }
+  .leaflet-tooltip.mapc-tip{
+    font-family:'Inter',sans-serif; font-size:12px; font-weight:600;
+    color: var(--coffee); background: var(--paper);
+    border: 1px solid var(--line-strong); border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(62,46,42,.15); padding: 4px 9px;
+  }
+  .leaflet-popup-content-wrapper{ border-radius: 12px; font-family:'Inter',sans-serif; color: var(--coffee); }
+  .leaflet-popup-content{ margin: 14px 16px; font-size:12.5px; line-height:1.45; }
+  .mapc-pop-name{ font-family:'Fraunces',serif; font-size:16px; font-weight:600; margin-bottom:4px; }
+  .mapc-pop-code{
+    display:inline-block; font-size:11px; font-weight:600;
+    color: var(--rose-deep); background: var(--rose-pale);
+    padding: 2px 8px; border-radius: 20px; margin-bottom:8px;
+  }
+  .mapc-pop-row{ color: var(--coffee-soft); margin-top:3px; }
+  .mapc-pop-warn{ color:#7A5A22; background: var(--gold-soft); border-radius:8px; padding:5px 8px; margin-top:8px; font-size:11.5px; }
+  .mapc-pop-link{ display:inline-block; margin-top:10px; color: var(--rose-deep); font-weight:600; text-decoration:none; }
+  .mapc-pop-link:hover{ text-decoration:underline; }
+
+  @media (max-width: 900px){
+    .mapc-layout{ grid-template-columns: 1fr; }
+    .mapc-map-wrap{ height: 60vh; min-height: 360px; }
+    .mapc-list-wrap{ height:auto; max-height: 320px; min-height:0; }
+  }
 </style>
 </head>
 <body>
@@ -1936,6 +2036,11 @@
           <span class="dot"></span>
           <i class="icon ti ti-users"></i>
           <span>Clientes</span>
+        </div>
+        <div class="nav-item" data-page="mapa-clientes">
+          <span class="dot"></span>
+          <i class="icon ti ti-map-2"></i>
+          <span>Mapa de clientes</span>
         </div>
       </div>
 
@@ -2319,6 +2424,24 @@
             <i class="ti ti-users" aria-hidden="true"></i>
             <p>Nenhum cliente encontrado para essa busca.</p>
           </div>
+        </div>
+      </div>
+
+      <!-- ===== VIEW: Mapa de clientes ===== -->
+      <div class="view" id="view-mapa-clientes">
+        <div class="mapc-toolbar">
+          <div class="clients-search">
+            <i class="ti ti-search" aria-hidden="true"></i>
+            <input type="text" id="mapc-search" placeholder="Buscar por cliente, bairro ou cidade...">
+          </div>
+          <label class="mapc-toggle"><input type="checkbox" id="mapc-names"><span>Mostrar nomes no mapa</span></label>
+          <button type="button" class="mapc-btn" id="mapc-fit"><i class="ti ti-focus-2" aria-hidden="true"></i>Ver todos</button>
+          <button type="button" class="mapc-btn" id="mapc-refresh" title="Tentar localizar novamente os endereços pendentes"><i class="ti ti-refresh" aria-hidden="true"></i>Atualizar</button>
+        </div>
+        <p class="results-count" id="mapc-status">Carregando clientes…</p>
+        <div class="mapc-layout">
+          <div class="mapc-map-wrap"><div id="mapc-map"></div></div>
+          <aside class="mapc-list-wrap"><div id="mapc-list"></div></aside>
         </div>
       </div>
 
@@ -3037,6 +3160,7 @@
     'relatorios': { title: 'Relatórios', eyebrow: 'Pedidos' },
     'cadastrar-cliente': { title: 'Cadastrar cliente', eyebrow: 'Clientes' },
     'clientes': { title: 'Clientes', eyebrow: 'Clientes' },
+    'mapa-clientes': { title: 'Mapa de clientes', eyebrow: 'Clientes' },
     'produtos': { title: 'Produtos', eyebrow: 'Produtos' },
     'estoque': { title: 'Estoque', eyebrow: 'Produtos' },
     'despesas': { title: 'Despesas', eyebrow: 'Financeiro' }
@@ -6041,6 +6165,290 @@
   updateMonthLabel();
   renderDespesas();
 
+})();
+</script>
+
+<!-- ===== Mapa de clientes ===== -->
+<script>
+(function(){
+  var view = document.getElementById('view-mapa-clientes');
+  if (!view) return;
+
+  var mapEl = document.getElementById('mapc-map');
+  var listEl = document.getElementById('mapc-list');
+  var statusEl = document.getElementById('mapc-status');
+  var searchEl = document.getElementById('mapc-search');
+  var namesEl = document.getElementById('mapc-names');
+
+  var map = null, group = null;
+  var markers = {};      // id -> { marker, c, base }
+  var coords = {};       // id -> { lat, lng, precisao }
+  var attempted = {};    // chave de endereço -> true (tentado nesta sessão)
+  var userMoved = false;
+  var running = false;
+  var lastSig = '';
+  var CACHE_KEY = 'crm_mapa_geocache_v1';
+  var cache = {};
+  try { cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}') || {}; } catch(e){ cache = {}; }
+  function saveCache(){ try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch(e){} }
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(m){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+    });
+  }
+  function nomeDe(c){ return (c.tipo === 'pf' ? c.nome : c.razao) || 'Sem nome'; }
+  function enderecoDe(c){
+    var e = c.entrega && (c.entrega.rua || c.entrega.cep) ? c.entrega : c.faturamento;
+    return e && (e.rua || e.cep || e.cidade) ? e : null;
+  }
+  function chave(a){
+    return [a.rua, a.numero, a.bairro, a.cidade, a.uf, (a.cep || '').replace(/\D/g,'')]
+      .map(function(x){ return (x || '').toString().trim().toLowerCase(); }).join('|');
+  }
+  function textoEndereco(a){
+    if (!a) return '';
+    var l1 = [a.rua, a.numero].filter(Boolean).join(', ');
+    var l2 = [a.bairro, [a.cidade, a.uf].filter(Boolean).join('/')].filter(Boolean).join(' – ');
+    return [l1, l2].filter(Boolean).join(' · ');
+  }
+
+  /* ---------- Geocodificação (OpenStreetMap/Nominatim + BrasilAPI) ---------- */
+  var lastCall = 0;
+  function pausa(){
+    var espera = Math.max(0, 1100 - (Date.now() - lastCall));
+    return new Promise(function(r){ setTimeout(function(){ lastCall = Date.now(); r(); }, espera); });
+  }
+  function nominatim(q){
+    return pausa().then(function(){
+      return fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=br&accept-language=pt-BR&q=' + encodeURIComponent(q));
+    }).then(function(r){ return r.json(); })
+      .then(function(arr){ return arr && arr[0] ? { lat: parseFloat(arr[0].lat), lng: parseFloat(arr[0].lon) } : null; })
+      .catch(function(){ return null; });
+  }
+  function porCep(cep){
+    cep = (cep || '').replace(/\D/g,'');
+    if (cep.length !== 8) return Promise.resolve(null);
+    return fetch('https://brasilapi.com.br/api/cep/v2/' + cep)
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var k = d && d.location && d.location.coordinates;
+        var lat = k && parseFloat(k.latitude), lng = k && parseFloat(k.longitude);
+        return (isFinite(lat) && isFinite(lng)) ? { lat: lat, lng: lng } : null;
+      }).catch(function(){ return null; });
+  }
+  function geocodificar(a){
+    var cidadeUf = [a.cidade, a.uf, 'Brasil'].filter(Boolean).join(', ');
+    var passos = [];
+    if (a.rua) passos.push(function(){
+      return nominatim([a.rua, a.numero, a.bairro, cidadeUf].filter(Boolean).join(', '))
+        .then(function(p){ return p && { lat:p.lat, lng:p.lng, precisao:'exato' }; });
+    });
+    if (a.rua) passos.push(function(){
+      return nominatim([a.rua, a.bairro, cidadeUf].filter(Boolean).join(', '))
+        .then(function(p){ return p && { lat:p.lat, lng:p.lng, precisao:'rua' }; });
+    });
+    passos.push(function(){
+      return porCep(a.cep).then(function(p){ return p && { lat:p.lat, lng:p.lng, precisao:'rua' }; });
+    });
+    if (a.bairro && a.cidade) passos.push(function(){
+      return nominatim([a.bairro, cidadeUf].join(', '))
+        .then(function(p){ return p && { lat:p.lat, lng:p.lng, precisao:'bairro' }; });
+    });
+    if (a.cidade) passos.push(function(){
+      return nominatim(cidadeUf).then(function(p){ return p && { lat:p.lat, lng:p.lng, precisao:'cidade' }; });
+    });
+    return passos.reduce(function(prom, passo){
+      return prom.then(function(res){ return res || passo(); });
+    }, Promise.resolve(null));
+  }
+
+  /* ---------- Mapa ---------- */
+  function iniciarMapa(){
+    if (map) return;
+    map = L.map(mapEl, { zoomControl: true }).setView([-23.55, -46.63], 9);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
+    }).addTo(map);
+    group = L.layerGroup().addTo(map);
+    map.on('dragstart', function(){ userMoved = true; });
+  }
+
+  var PIN_SVG =
+    '<svg class="mapc-pin" width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">' +
+    '<path d="M15 1C7.3 1 1 7.2 1 14.8 1 25 15 39 15 39s14-14 14-24.2C29 7.2 22.7 1 15 1z" fill="#841515" stroke="#FFFDF9" stroke-width="2"/>' +
+    '<circle cx="15" cy="14.5" r="5.2" fill="#FFFDF9"/></svg>';
+  var pinIcon = function(){ return L.divIcon({ className:'', html: PIN_SVG, iconSize:[30,40], iconAnchor:[15,39], popupAnchor:[0,-34], tooltipAnchor:[0,-34] }); };
+
+  function popupHtml(c, info){
+    var a = enderecoDe(c);
+    var h = '<div class="mapc-pop-name">' + esc(nomeDe(c)) + '</div>';
+    if (c.codigo) h += '<span class="mapc-pop-code">#' + esc(c.codigo) + '</span>';
+    if (c.tipo === 'pj' && c.responsavel) h += '<div class="mapc-pop-row"><b>Responsável:</b> ' + esc(c.responsavel) + '</div>';
+    if (c.whatsapp) h += '<div class="mapc-pop-row"><b>WhatsApp:</b> ' + esc(c.whatsapp) + '</div>';
+    h += '<div class="mapc-pop-row"><b>Endereço:</b> ' + esc(textoEndereco(a)) + '</div>';
+    if (info.precisao === 'bairro' || info.precisao === 'cidade'){
+      h += '<div class="mapc-pop-warn">Localização aproximada (' + (info.precisao === 'bairro' ? 'bairro' : 'cidade') + ') — não foi possível achar a rua exata.</div>';
+    }
+    h += '<a class="mapc-pop-link" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + info.lat + ',' + info.lng + '">Abrir no Google Maps →</a>';
+    return h;
+  }
+
+  function aplicarRotulo(m){
+    m.marker.unbindTooltip();
+    m.marker.bindTooltip(esc(nomeDe(m.c)), {
+      className: 'mapc-tip', direction: 'top',
+      permanent: namesEl.checked, opacity: 1
+    });
+  }
+
+  function posicionar(c, info){
+    var base = info.lat.toFixed(5) + ',' + info.lng.toFixed(5);
+    var iguais = 0;
+    Object.keys(markers).forEach(function(id){ if (id !== c.id && markers[id].base === base) iguais++; });
+    var lat = info.lat, lng = info.lng;
+    if (iguais > 0){   // evita pins sobrepostos no mesmo endereço
+      var ang = iguais * (Math.PI / 3), raio = 0.00012 * Math.ceil(iguais / 6);
+      lat += Math.sin(ang) * raio; lng += Math.cos(ang) * raio;
+    }
+    var m = markers[c.id];
+    if (!m){
+      m = { marker: L.marker([lat, lng], { icon: pinIcon(), title: nomeDe(c), riseOnHover: true }), c: c, base: base };
+      markers[c.id] = m;
+    } else {
+      m.marker.setLatLng([lat, lng]); m.c = c; m.base = base;
+    }
+    m.marker.unbindPopup();
+    m.marker.bindPopup(popupHtml(c, info), { maxWidth: 290 });
+    aplicarRotulo(m);
+  }
+
+  /* ---------- Filtro + lista ---------- */
+  function casa(c, termo){
+    if (!termo) return true;
+    var a = enderecoDe(c) || {};
+    return [nomeDe(c), c.codigo, c.responsavel, a.bairro, a.cidade, a.rua]
+      .join(' ').toLowerCase().indexOf(termo) !== -1;
+  }
+
+  function renderizar(){
+    var termo = (searchEl.value || '').trim().toLowerCase();
+    var clientes = window.__crmClientes || [];
+    var visiveis = clientes.filter(function(c){ return casa(c, termo); });
+
+    if (group){
+      Object.keys(markers).forEach(function(id){
+        var m = markers[id];
+        var mostrar = casa(m.c, termo);
+        if (mostrar && !group.hasLayer(m.marker)) group.addLayer(m.marker);
+        if (!mostrar && group.hasLayer(m.marker)) group.removeLayer(m.marker);
+      });
+    }
+
+    var noMapa = clientes.filter(function(c){ return markers[c.id]; }).length;
+    var pend = clientes.length - noMapa;
+    statusEl.textContent = clientes.length + (clientes.length === 1 ? ' cliente cadastrado' : ' clientes cadastrados') +
+      ' · ' + noMapa + ' no mapa' +
+      (running ? ' · localizando endereços…' : (pend > 0 ? ' · ' + pend + ' sem localização' : ''));
+
+    listEl.innerHTML = '';
+    if (!visiveis.length){
+      listEl.innerHTML = '<div class="mapc-empty">' + (clientes.length ? 'Nenhum cliente encontrado para essa busca.' : 'Nenhum cliente cadastrado.') + '</div>';
+      return;
+    }
+    visiveis.slice().sort(function(a, b){ return nomeDe(a).localeCompare(nomeDe(b), 'pt-BR'); }).forEach(function(c){
+      var m = markers[c.id], a = enderecoDe(c) || {};
+      var sub = [a.bairro, a.cidade].filter(Boolean).join(' – ') || 'Endereço não informado';
+      var div = document.createElement('div');
+      div.className = 'mapc-item' + (m ? '' : ' is-missing');
+      div.innerHTML =
+        '<div class="mapc-item-ico"><i class="ti ' + (m ? 'ti-map-pin' : 'ti-map-pin-off') + '" aria-hidden="true"></i></div>' +
+        '<div><div class="mapc-item-name">' + esc(nomeDe(c)) + '</div>' +
+        '<div class="mapc-item-sub">' + esc(m ? sub : (running ? 'Localizando…' : 'Não localizado · ' + sub)) + '</div></div>';
+      if (m) div.addEventListener('click', function(){
+        userMoved = true;
+        if (!group.hasLayer(m.marker)) group.addLayer(m.marker);
+        map.flyTo(m.marker.getLatLng(), Math.max(map.getZoom(), 16), { duration: .8 });
+        setTimeout(function(){ m.marker.openPopup(); }, 850);
+      });
+      listEl.appendChild(div);
+    });
+  }
+
+  function enquadrar(){
+    if (!map) return;
+    var pts = Object.keys(markers).map(function(id){ return markers[id].marker.getLatLng(); });
+    if (!pts.length) return;
+    if (pts.length === 1) map.setView(pts[0], 15);
+    else map.fitBounds(L.latLngBounds(pts), { padding: [50, 50], maxZoom: 16 });
+  }
+
+  /* ---------- Sincronização com os clientes cadastrados ---------- */
+  function assinatura(){
+    return (window.__crmClientes || []).map(function(c){
+      var a = enderecoDe(c);
+      return c.id + ':' + nomeDe(c) + ':' + (a ? chave(a) : '');
+    }).join('#');
+  }
+
+  async function sincronizar(){
+    if (!map || running) return;
+    var clientes = window.__crmClientes || [];
+    lastSig = assinatura();
+
+    // remove pins de clientes que não existem mais
+    var ids = {}; clientes.forEach(function(c){ ids[c.id] = true; });
+    Object.keys(markers).forEach(function(id){
+      if (!ids[id]){ group.removeLayer(markers[id].marker); delete markers[id]; }
+    });
+
+    var fila = [];
+    clientes.forEach(function(c){
+      var a = enderecoDe(c);
+      if (!a) return;
+      var k = chave(a);
+      if (cache[k]) posicionar(c, cache[k]);
+      else if (!attempted[k]) fila.push({ c: c, a: a, k: k });
+      else if (markers[c.id]){ group.removeLayer(markers[c.id].marker); delete markers[c.id]; }
+    });
+    renderizar();
+    if (!userMoved) enquadrar();
+
+    if (!fila.length) return;
+    running = true; renderizar();
+    for (var i = 0; i < fila.length; i++){
+      var it = fila[i];
+      attempted[it.k] = true;
+      var info = await geocodificar(it.a);
+      if (info){ cache[it.k] = info; saveCache(); posicionar(it.c, info); }
+      renderizar();
+    }
+    running = false;
+    renderizar();
+    if (!userMoved) enquadrar();
+  }
+
+  /* ---------- Eventos ---------- */
+  searchEl.addEventListener('input', renderizar);
+  namesEl.addEventListener('change', function(){ Object.keys(markers).forEach(function(id){ aplicarRotulo(markers[id]); }); });
+  document.getElementById('mapc-fit').addEventListener('click', function(){ userMoved = false; enquadrar(); });
+  document.getElementById('mapc-refresh').addEventListener('click', function(){ attempted = {}; userMoved = false; sincronizar(); });
+
+  function aoAbrir(){
+    iniciarMapa();
+    setTimeout(function(){ map.invalidateSize(); sincronizar(); }, 60);
+  }
+  new MutationObserver(function(){
+    if (view.classList.contains('is-visible')) aoAbrir();
+  }).observe(view, { attributes: true, attributeFilter: ['class'] });
+  if (view.classList.contains('is-visible')) aoAbrir();
+
+  // acompanha novos cadastros / edições / exclusões enquanto a aba está aberta
+  setInterval(function(){
+    if (map && view.classList.contains('is-visible') && !running && assinatura() !== lastSig) sincronizar();
+  }, 2500);
+  window.addEventListener('resize', function(){ if (map) map.invalidateSize(); });
 })();
 </script>
 
